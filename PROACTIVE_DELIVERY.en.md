@@ -185,10 +185,9 @@ await ctx.dshIm.send(botId, targetId, '# Daily report\n\n**Checks complete**', {
 | DingTalk | Proactive Markdown message; definite format rejection falls back to text |
 | Slack | Standard Markdown block with top-level notification text; explicit block rejection falls back to the existing text sender |
 | WeCom bot | Existing Markdown message type |
-| Matrix | Sanitized HTML with a text body |
 | Discord | Native Markdown in message content |
 | WhatsApp | Limited conversion of common formatting; code is protected and complex syntax stays literal |
-| WeCom app / Weixin | Full text, including code and link destinations |
+| Weixin | Full text, including code and link destinations |
 
 Channels apply their own message limits and splitting. Feishu proactive cards retain their existing unsplit behavior and do not automatically resend as text after rejection or an uncertain result. Other newly added fallback paths only handle local formatting errors or definite format rejection; they do not resend accepted chunks or retry ambiguous network outcomes. Older Hosts may ignore `format`; load the updated plugin on the Host.
 
@@ -342,7 +341,7 @@ This also expands network reachability for the other pages and routes on that We
 Connection RPC accepts loopback callers by default. If a Web profile is deliberately served on a trusted LAN, it can reuse the existing Host authority in that profile's `cordis.patch.yml`:
 
 ```yaml
-- id: xmanrui-dsh-im
+- id: dsh-im
   config:
     rpcAuthority: trusted-host
 ```

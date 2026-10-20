@@ -1688,21 +1688,21 @@ test('Enterprise WeChat accepts only an exact approval decision and never forwar
         prompts.push(text);
         await options.onInteraction({
           kind: 'approval',
-          interactionId: 'wecom-approval',
-          rpcId: 'wecom-approval-rpc',
+          interactionId: 'wecom-consent',
+          rpcId: 'wecom-consent-rpc',
           sessionId,
           payload: {
             type: 'approval/requested',
             sessionId,
-            approvalId: 'wecom-approval',
+            approvalId: 'wecom-consent',
             toolName: 'bash',
-            callId: 'wecom-approval-call',
+            callId: 'wecom-consent-call',
             reason: '允许执行企业微信审批测试',
           },
           toolCall: {
-            callId: 'wecom-approval-call',
+            callId: 'wecom-consent-call',
             name: 'bash',
-            arguments: JSON.stringify({ command: "printf 'wecom-approval\\n'" }),
+            arguments: JSON.stringify({ command: "printf 'wecom-consent\\n'" }),
           },
           respond: async (result) => {
             responses.push(result);
@@ -1751,7 +1751,7 @@ test('Enterprise WeChat accepts only an exact approval decision and never forwar
     ok: true,
     value: {
       sessionId: 'session-existing',
-      approvalId: 'wecom-approval',
+      approvalId: 'wecom-consent',
       outcome: 'allowed-once',
     },
   }]);

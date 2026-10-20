@@ -32,7 +32,6 @@ import { WhatsappAccountCard } from '../plugin-src/client/channels/whatsapp/inde
 import { IMessageAccountCard } from '../plugin-src/client/channels/imessage/index.js';
 import { IMSettingsTab } from '../plugin-src/client/index.js';
 import { BotSettingsContext } from '../plugin-src/client/channel-card-meta.js';
-import { AccountCard as WecomAppAccountCard } from '../plugin-src/client/channels/wecom-app/index.js';
 
 const { act, create } = TestRenderer;
 
@@ -131,7 +130,7 @@ test('delivery settings define only the ten supported IM channel routes', () => 
   assert.equal(botSettingsTabsForChannel('feishu'), FEISHU_BOT_SETTINGS_TABS);
   assert.equal(DELIVERY_RPC_CHANNEL, '/dsh-im-delivery');
   assert.deepEqual(Object.keys(DELIVERY_CHANNEL_DEFINITIONS), [
-    'weixin', 'feishu', 'dingtalk', 'wecom', 'wecomApp', 'qq',
+    'weixin', 'feishu', 'dingtalk', 'wecom', 'qq',
     'slack', 'telegram', 'discord', 'whatsapp', 'imessage',
   ]);
   assert.deepEqual(
@@ -146,7 +145,6 @@ test('delivery settings define only the ten supported IM channel routes', () => 
     DELIVERY_CHANNEL_DEFINITIONS.telegram.fields.topic.map((field) => field.key),
     ['chatId', 'messageThreadId'],
   );
-  assert.equal('office' in DELIVERY_CHANNEL_DEFINITIONS, false);
   assert.deepEqual(Object.keys(ACCESS_CHANNEL_DEFINITIONS), Object.keys(DELIVERY_CHANNEL_DEFINITIONS));
   assert.equal(ACCESS_CHANNEL_DEFINITIONS.weixin.groupSupported, false);
 });
@@ -172,7 +170,6 @@ test('robot card settings toggle expands in place and more settings preserves th
     ['weixin', WeixinAccountCard, { account }],
     ['dingtalk', DingtalkAccountCard, { account }],
     ['wecom', WecomAccountCard, { account }],
-    ['wecomApp', WecomAppAccountCard, { account }],
     ['qq', QqAccountCard, { account }],
     ['slack', SlackAccountCard, { account }],
     ['telegram', TelegramAccountCard, { account }],
@@ -246,6 +243,7 @@ test('expanded card more settings opens a bot-scoped page and returns in place',
     let mounted;
     await act(async () => {
       mounted = create(React.createElement(IMSettingsTab, {
+        preferredSectionId: 'weixin',
         browserLocation: { href: 'http://localhost:9527/settings' },
         weixinRpcCall: async (endpoint) => {
           assert.equal(endpoint, 'connection.status');

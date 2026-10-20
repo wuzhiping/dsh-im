@@ -8,7 +8,7 @@
 
 | 项目 | 决定 |
 | --- | --- |
-| 更新对象 | 仅 `@xmanrui/dsh-im` 插件，不更新 Harness、Desktop 本体或其他插件 |
+| 更新对象 | 仅 `dsh-im` 插件，不更新 Harness、Desktop 本体或其他插件 |
 | 更新来源 | npm；不查询 GitHub Release、不拉 GitHub 源码、不提供 GitHub 回退源 |
 | 更新版本 | npm `latest` 指向的稳定版本；安装用户确认的具体版本号 |
 | 检查方式 | 用户点击“检查更新”；首期不做启动时或后台定时检查 |
@@ -79,9 +79,9 @@ DSH-IM v3.0.8                  [检查更新] [GitHub ↗]
 
 为使检查结果与实际安装一致，首期使用公开 npm 官方 registry：`https://registry.npmjs.org/`。本期不新增镜像、私有 registry 或源切换设置。
 
-版本检查由 Host 发起，请求固定包的 npm 元数据，例如 `https://registry.npmjs.org/@xmanrui%2Fdsh-im/latest`。浏览器不直接访问 registry，不提交自定义 URL、包名或安装 spec。
+版本检查由 Host 发起，请求固定包的 npm 元数据，例如 `https://registry.npmjs.org/dsh-im/latest`。浏览器不直接访问 registry，不提交自定义 URL、包名或安装 spec。
 
-安装时明确使用同一 registry。安装前还要核对 `@xmanrui` 的有效作用域 registry：如果它覆盖到了其他地址，不能以为仅传 `--registry` 就必然消除了覆盖。首期对此显示手动处理说明，不改写用户 `.npmrc`、不读取或回传其中的认证值，不混用两个来源。pnpm 的 registry 与认证配置规则见[配置文档](https://pnpm.io/cli/config)。
+安装时明确使用同一 registry。安装前还要核对当前 profile 的默认 registry：如果它指向其他地址，界面会提示冲突并转入手动处理。首期不改写用户 `.npmrc`、不读取或回传其中的认证值，不混用两个来源。pnpm 的 registry 与认证配置规则见[配置文档](https://pnpm.io/cli/config)。
 
 不进行 GitHub 回退，不执行 `git clone`、`git pull` 或 GitHub 安装 spec。发行检查应保证 dsh-im 发布包的运行依赖不依赖 GitHub 拉取；不对同一 profile 中其他插件已有的依赖来源做自动迁移。
 
@@ -142,7 +142,7 @@ Desktop 优先读取已声明的可选 `desktopProfiles` 服务的 `current.name
 以 `web` profile、目标版本 `3.0.8` 为示例，安装命令语义为：
 
 ```sh
-dsh plugin --profile web add -w --save-exact @xmanrui/dsh-im@3.0.8 --registry=https://registry.npmjs.org/
+dsh plugin --profile web add -w --save-exact dsh-im@3.0.8 --registry=https://registry.npmjs.org/
 ```
 
 实际 profile 和版本来自 Host 已验证的更新记录，不写死为示例值。`--save-exact` 保存精确版本；不使用 `@latest` 在点击后重新选择版本，不执行无包名的全量 `update`。[pnpm 参数说明](https://pnpm.io/cli/add)
@@ -161,7 +161,7 @@ macOS 适配器使用 Desktop 内置的 CLI bootstrap，与 Desktop 自己的终
 可执行程序：当前 Desktop 的 process.execPath
 参数：--expose-internals <已验证的 desktop-cli.js>
       plugin --profile <当前 profile> add -w --save-exact
-      @xmanrui/dsh-im@<确认版本> --registry=https://registry.npmjs.org/
+      dsh-im@<确认版本> --registry=https://registry.npmjs.org/
 子进程环境：ELECTRON_RUN_AS_NODE=1，当前 DSH_HOME，Desktop 的 pnpm PATH
 ```
 
@@ -350,7 +350,7 @@ flowchart TD
 
 ### 实际改动
 
-- `plugin-src/host/update-runtime.mjs`：校验当前 profile、包来源、入口和作用域 registry；复用宿主的 Desktop/CLI 异步执行能力。
+- `plugin-src/host/update-runtime.mjs`：校验当前 profile、包来源、入口和默认 registry；复用宿主的 Desktop/CLI 异步执行能力。
 - `plugin-src/host/update-service.mjs`：固定 npm 检查、SemVer、确认记录、任务锁、持久状态和磁盘校验。
 - `plugin-src/host/update-rpc.mjs`：独立 `/dsh-im` 通道，严格输入和固定 `loopback` 权限。
 - `plugin-src/client/update-panel.js`：一个按钮和对话框，复用轮询调度器，重新挂载后从 Host 恢复状态；手动重启后也可在原页面刷新本地状态。
@@ -418,7 +418,7 @@ DSH_TELEMETRY_DISABLED=1 \
 按钮使用当前 Node 和已校验 CLI 入口执行的命令，等价于：
 
 ```sh
-dsh plugin --profile web add -w --save-exact @xmanrui/dsh-im@3.0.8 --registry=https://registry.npmjs.org/
+dsh plugin --profile web add -w --save-exact dsh-im@3.0.8 --registry=https://registry.npmjs.org/
 ```
 
 `web` 来自当前 Host 的 profile，不接受浏览器传入的替代 profile。这里的 3.0.8 是本次官方 npm 检查和用户确认的目标，不是运行时写死的更新版本。
@@ -438,7 +438,7 @@ dsh plugin --profile web add -w --save-exact @xmanrui/dsh-im@3.0.8 --registry=ht
 
 ### 保护行为
 
-- 临时冲突的 `@xmanrui:registry` 会显示源冲突并移除安装操作；移除该测试配置后可重新检查。未改用户的 registry 配置。
+- 临时冲突的默认 `registry` 会显示源冲突并移除安装操作；移除该测试配置后可重新检查。未改用户的 registry 配置。
 - 任意附加安装选项被 `bad-request` 拒绝，伪造确认被 `check-expired` 拒绝，跨源安装请求返回 HTTP 403。
 - 另用相同的全局安装 CLI 验证源码 profile：status/check 正常，但始终是 `source-install`、`canInstall:false`、`checkId:null`；伪造安装没有创建任务，清单和锁文件不变。
 - 日常 `~/.dsh/profiles/web` 和 `desktop` 仍通过 `link:<项目绝对路径>` 指向原源码目录，未替换为 npm 安装。

@@ -119,7 +119,7 @@ test('web keeps its one bilingual settings entry, including hosts without provid
     const host = start(t, { provide });
     assert.equal(host.entries.size, 1);
     const { options, component } = [...host.entries][0];
-    assert.equal(options.id, 'xmanrui-dsh-im');
+    assert.equal(options.id, 'dsh-im');
     assert.equal(options.order, 21);
     assert.equal(options.label(), 'IM机器人');
     assert.equal(options.locale, 'dsh-im');
@@ -238,8 +238,8 @@ test('render returns fresh elements of a stable type without changing settings o
 
 test('preferred section is initial-only, invalid sections retain the web default', (t) => {
   const host = start(t);
-  for (const id of ['weixin', 'feishu', 'dingtalk', 'wecom', 'wecomApp', 'qq', 'slack',
-    'telegram', 'discord', 'whatsapp', 'imessage', 'matrix', 'office', 'global-settings', 'unknown', undefined]) {
+  for (const id of ['weixin', 'feishu', 'dingtalk', 'wecom', 'qq', 'slack',
+    'telegram', 'discord', 'whatsapp', 'imessage', 'global-settings', 'unknown', undefined]) {
     const markup = renderToStaticMarkup(host.service.render({ preferredSectionId: id }));
     const expected = !id || id === 'unknown' ? 'weixin' : id;
     assert.ok(markup.includes(`id="dim-panel-${expected}"`), String(id));
@@ -263,15 +263,14 @@ test('embedded panel receives the same management calls and picker, ignoring inj
   for (const [name, value] of Object.entries(dependencies)) assert.equal(props[name], value, name);
   const before = host.calls.length;
   const signal = new AbortController().signal;
-  for (const name of ['feishuRpcCall', 'emailRpcCall', 'matrixRpcCall', 'updateRpcCall', 'deliveryRpcCall', 'globalSettingsRpcCall']) {
+  for (const name of ['feishuRpcCall', 'emailRpcCall', 'wecomRpcCall', 'deliveryRpcCall', 'globalSettingsRpcCall']) {
     props[name]('check', { test: true }, signal);
   }
-  assert.equal(host.calls.length, before + 6);
+  assert.equal(host.calls.length, before + 5);
   assert.deepEqual(host.calls.slice(before).map((args) => args.slice(1)), [
     ['dsh-im/feishu', { method: 'check', payload: { test: true } }, signal],
     ['dsh-im/email', { method: 'check', payload: { test: true } }, signal],
-    ['dsh-im/matrix', { method: 'check', payload: { test: true } }, signal],
-    ['dsh-im/dsh-im', { method: 'check', payload: { test: true } }, signal],
+    ['dsh-im/wecom', { method: 'check', payload: { test: true } }, signal],
     ['dsh-im/dsh-im-delivery', { method: 'check', payload: { test: true } }, signal],
     ['dsh-im/dsh-im-settings', { method: 'check', payload: { test: true } }, signal],
   ]);

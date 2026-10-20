@@ -34,7 +34,6 @@ import {
   AccountCard as WecomAccountCard,
   WecomSettingsTab,
 } from '../plugin-src/client/channels/wecom/index.js';
-import { WecomAppSettingsTab } from '../plugin-src/client/channels/wecom-app/index.js';
 import {
   AccountCard as QqAccountCard,
   QqSettingsTab,
@@ -191,7 +190,7 @@ test('removing the first account preserves collapse styles and toggling for rema
   }
 });
 
-test('IM settings renders twelve IM channels plus the AI Office connector', async () => {
+test('IM settings renders the ten IM channels enabled in this render', async () => {
   const { default: packageMetadata } = await import('../package.json', {
     with: { type: 'json' },
   });
@@ -202,7 +201,6 @@ test('IM settings renders twelve IM channels plus the AI Office connector', asyn
     weixinRpcCall: async () => ({ ok: true, value: {} }),
     dingtalkRpcCall: async () => ({ ok: true, value: {} }),
     wecomRpcCall: async () => ({ ok: true, value: {} }),
-    wecomAppRpcCall: async () => ({ ok: true, value: {} }),
     qqRpcCall: async () => ({ ok: true, value: {} }),
     slackRpcCall: async () => ({ ok: true, value: {} }),
     telegramRpcCall: async () => ({ ok: true, value: {} }),
@@ -210,11 +208,10 @@ test('IM settings renders twelve IM channels plus the AI Office connector', asyn
     whatsappRpcCall: async () => ({ ok: true, value: {} }),
     imessageRpcCall: async () => ({ ok: true, value: {} }),
     emailRpcCall: async () => ({ ok: true, value: {} }),
-    officeRpcCall: async () => ({ ok: true, value: {} }),
   }));
 
   assert.match(markup, /IM机器人/);
-  assert.match(markup, /让 DeepSeek Harness 触手可及/);
+  assert.doesNotMatch(markup, /触手可及|Connecting DeepSeek Harness/);
   assert.match(markup, /class="dim-brand"/);
   assert.equal(IM_PLUGIN_VERSION, packageVersion);
   assert.match(markup, new RegExp(
@@ -222,16 +219,12 @@ test('IM settings renders twelve IM channels plus the AI Office connector', asyn
   ));
   assert.doesNotMatch(markup, /dim-versionTooltip|当前版本/);
   assert.doesNotMatch(markup, /dim-brandLogo|<img/);
-  assert.match(markup, /href="https:\/\/github\.com\/xmanrui\/dsh-im"/);
-  assert.match(markup, /target="_blank"/);
-  assert.match(markup, /rel="noopener noreferrer"/);
-  assert.match(markup, /aria-label="dsh-im GitHub"/);
-  assert.match(markup, /dim-updateTrigger[^>]*aria-label="检查更新"[^>]*aria-haspopup="dialog"[^>]*><svg/);
-  assert.match(markup, /class="dim-updateTooltip" role="tooltip">检查更新<\/span>/);
-  assert.ok(markup.indexOf('dim-updateTrigger') < markup.indexOf('dim-githubAction'));
-  assert.ok(markup.indexOf('dim-githubAction') < markup.indexOf('dim-generalSettingsAction'));
-  assert.match(markup, /aria-describedby="[^"]+"/);
-  assert.match(markup, /role="tooltip"[^>]*>帮助与反馈 · 前往 GitHub</);
+  // The header keeps only the version badge and the general-settings gear:
+  // no update trigger, no GitHub link, no tagline.
+  assert.doesNotMatch(markup, /github\.com|dim-githubAction|dim-githubLink|dsh-im GitHub/);
+  assert.doesNotMatch(markup, /dim-updateTrigger|dim-updateTooltip|检查更新/);
+  assert.doesNotMatch(markup, /帮助与反馈 · 前往 GitHub/);
+  assert.ok(markup.indexOf('dim-titleActions') < markup.indexOf('dim-generalSettingsAction'));
   assert.match(markup, /id="dim-general-settings-trigger"/);
   assert.match(markup, /aria-label="通用设置"/);
   assert.doesNotMatch(markup, /aria-current="page"/);
@@ -242,16 +235,13 @@ test('IM settings renders twelve IM channels plus the AI Office connector', asyn
   assert.match(settingsButtonMarkup, /data-im-icon="global-settings"/);
   assert.doesNotMatch(settingsButtonMarkup, /通用设置/);
   assert.match(styles, /\.dim-title \{[^}]*margin: 0 0 18px;/);
-  assert.match(styles, /\.dim-title p \{[^}]*color: var\(--dsw-alias-label-secondary, #646a73\);[^}]*font-size: 12px;[^}]*font-weight: 500;/);
   assert.match(styles, /\.dim-brand \{[^}]*display: flex;[^}]*flex-direction: column;[^}]*align-items: flex-start;[^}]*gap: 1px;/);
   assert.match(styles, /\.dim-brandHeading \{[^}]*display: flex;[^}]*align-items: baseline;[^}]*gap: 8px;[^}]*white-space: nowrap;/);
   assert.match(styles, /\.dim-brandName \{[^}]*font-size: 20px;[^}]*font-weight: 800;[^}]*letter-spacing: \.04em;/);
   assert.match(styles, /\.dim-brandVersion \{[^}]*color: var\(--dsw-alias-label-tertiary, #8f959e\);[^}]*font: 500 10px\/16px[^}]*letter-spacing: 0;/);
   assert.doesNotMatch(styles, /dim-versionTooltip|\.dim-brand:focus-visible/);
   assert.doesNotMatch(styles, /\.dim-brandLogo/);
-  assert.match(styles, /\.dim-githubLink \{[^}]*border: 1px solid var\(--dsw-alias-border-l2, #dfe1e5\);[^}]*text-decoration: none;/);
-  assert.match(styles, /\.dim-githubTooltip \{[^}]*top: calc\(100% \+ 8px\);[^}]*transform: translateY\(-3px\);/);
-  assert.match(styles, /\.dim-githubAction:hover \.dim-githubTooltip, \.dim-githubAction:focus-within \.dim-githubTooltip \{[^}]*opacity: 1;[^}]*visibility: visible;/);
+  assert.doesNotMatch(styles, /\.dim-github|\.dim-update/);
   assert.match(styles, /\.dim-generalSettingsButton \{[^}]*width: 30px;[^}]*height: 30px;[^}]*display: grid;[^}]*border: 1px solid var\(--dsw-alias-border-l2, #dfe1e5\);/);
   assert.match(styles, /\.dim-generalSettingsTooltip \{[^}]*top: calc\(100% \+ 8px\);[^}]*transform: translateY\(-3px\);/);
   assert.match(styles, /\.dim-generalSettingsAction:hover \.dim-generalSettingsTooltip, \.dim-generalSettingsButton:focus-visible \+ \.dim-generalSettingsTooltip \{[^}]*opacity: 1;[^}]*visibility: visible;/);
@@ -267,15 +257,12 @@ test('IM settings renders twelve IM channels plus the AI Office connector', asyn
   assert.match(markup, />飞书</);
   assert.match(markup, />钉钉</);
   assert.match(markup, />企业微信</);
-  assert.match(markup, />企业微信应用</);
   assert.match(markup, />QQ</);
   assert.match(markup, />Slack</);
   assert.match(markup, />Telegram</);
   assert.match(markup, />Discord</);
   assert.match(markup, />WhatsApp</);
   assert.match(markup, />iMessage</);
-  assert.match(markup, />Matrix</);
-  assert.match(markup, />AI Office<\/strong><small class="dim-channelNote">（实验功能）<\/small>/);
   assert.match(markup, /dim-logoWeixin/);
   assert.match(markup, /dim-logoFeishu/);
   assert.match(markup, /dim-logoDingtalk/);
@@ -286,20 +273,23 @@ test('IM settings renders twelve IM channels plus the AI Office connector', asyn
   assert.match(markup, /dim-logoDiscord/);
   assert.match(markup, /dim-logoWhatsapp/);
   assert.match(markup, /dim-logoIMessage/);
-  assert.match(markup, /dim-logoMatrix/);
-  assert.match(markup, /dim-logoOffice/);
   assert.match(styles, /\.dim-logoFeishu svg \{ width: 28px; height: 28px; \}/);
   // This render's `emailRpcCall` never reports the channel as
-  // enabled, so the mailbox entry point is omitted: twelve IM channels plus the
-  // AI Office connector. The email tab is covered separately below.
-  assert.equal((markup.match(/role="tab"/g) ?? []).length, 13);
+  // enabled, so the mailbox entry point is omitted and the rail holds the
+  // ten remaining IM channels in the shipped order. The email tab is covered
+  // separately below.
+  assert.deepEqual(
+    [...markup.matchAll(/id="dim-tab-([a-zA-Z]+)"/g)].map((match) => match[1]),
+    ['telegram', 'discord', 'slack', 'whatsapp', 'weixin', 'feishu', 'dingtalk', 'wecom', 'qq', 'imessage'],
+  );
+  assert.equal((markup.match(/role="tab"/g) ?? []).length, 10);
   assert.equal((markup.match(/aria-selected="true"/g) ?? []).length, 1);
   assert.doesNotMatch(markup, /role="switch"|type="checkbox"/);
   assert.doesNotMatch(markup, /dim-chevron|扫码绑定<\/small>|扫码接入<\/small>/);
   assert.doesNotMatch(markup, />INSTANT MESSAGING<|>Channel<|>微信设置</);
 });
 
-test('the general settings gear sits to the right of GitHub and outside the channel rail', () => {
+test('the general settings gear is the only title action and sits outside the channel rail', () => {
   const markup = renderToStaticMarkup(React.createElement(IMSettingsTab, {
     globalSettingsRpcCall: async () => ({ ok: true, value: { ttlHours: 0 } }),
     weixinRpcCall: async () => ({ ok: true, value: {} }),
@@ -309,7 +299,8 @@ test('the general settings gear sits to the right of GitHub and outside the chan
   assert.match(markup, /aria-controls="dim-panel-global-settings"/);
   assert.match(markup, /class="dim-generalSettingsAction"/);
   assert.match(markup, /data-im-icon="global-settings"/);
-  assert.ok(markup.indexOf('dim-githubAction') < markup.indexOf('dim-generalSettingsAction'));
+  assert.doesNotMatch(markup, /dim-githubAction|dim-updateTrigger/);
+  assert.ok(markup.indexOf('dim-titleActions') < markup.indexOf('dim-generalSettingsAction'));
   assert.ok(markup.indexOf('dim-generalSettingsAction') < markup.indexOf('dim-layout'));
   assert.doesNotMatch(markup, /id="dim-tab-global-settings"/);
   assert.doesNotMatch(markup, /dim-channelGlobal|dim-logoGlobal/);
@@ -1215,14 +1206,16 @@ test('the bundled DingTalk channel has no local sender approval workflow', async
 });
 
 test('the bilingual dictionary has no duplicate object keys', async () => {
-  const source = await readFile(new URL('../plugin-src/client/i18n.js', import.meta.url), 'utf8');
-  const { warnings } = await transform(source, { loader: 'js', logLevel: 'silent' });
-  assert.deepEqual(warnings.filter((warning) => warning.id === 'duplicate-object-key'), []);
+  for (const file of ['i18n.js', 'i18n-vi.js']) {
+    const source = await readFile(new URL(`../plugin-src/client/${file}`, import.meta.url), 'utf8');
+    const { warnings } = await transform(source, { loader: 'js', logLevel: 'silent' });
+    assert.deepEqual(warnings.filter((warning) => warning.id === 'duplicate-object-key'), [], file);
+  }
 });
 
 test('every shipped Chinese client string has an English projection', async () => {
   const paths = (await readdir(CLIENT_SOURCE_DIRECTORY_URL, { recursive: true }))
-    .filter((path) => path.endsWith('.js') && path !== 'i18n.js');
+    .filter((path) => path.endsWith('.js') && path !== 'i18n.js' && path !== 'i18n-vi.js');
   const sources = await Promise.all(paths.map((path) =>
     readFile(new URL(path, CLIENT_SOURCE_DIRECTORY_URL), 'utf8')));
   const strings = new Set();
@@ -1268,6 +1261,7 @@ test('client registers one top-level bilingual IM settings section with a direct
     return { ok: true, value: {} };
   };
   const localeListeners = new Set();
+  let activeLocale = 'en';
   const ctx = {
     effect(install, label) {
       effects.push({ install, label });
@@ -1288,7 +1282,7 @@ test('client registers one top-level bilingual IM settings section with a direct
         return () => {};
       },
       getLocale() {
-        return { active: 'en', locales: [], revision: 1 };
+        return { active: activeLocale, locales: [], revision: 1 };
       },
     },
     connection: { rpc: { call: rpcCall } },
@@ -1323,9 +1317,48 @@ test('client registers one top-level bilingual IM settings section with a direct
     assert.deepEqual(clientInject, ['slots', 'connection', 'locale', 'workspaces']);
     assert.equal(dictionaries[0].namespace, IM_LOCALE_NAMESPACE);
     assert.deepEqual(Object.keys(dictionaries[0].value.en).sort(), Object.keys(dictionaries[0].value.zh).sort());
+    // Vietnamese ships as an extra locale for the same namespace. Every English
+    // key must be present so the vi-VN -> en fallback never silently drops one.
+    const vietnamese = dictionaries[0].value['vi-VN'];
+    assert.ok(vietnamese, 'vi-VN dictionary is registered');
+    assert.deepEqual(
+      Object.keys(vietnamese).sort(),
+      Object.keys(dictionaries[0].value.en).filter((key) => key !== '$locale').sort(),
+    );
+    assert.equal(vietnamese['删除'], 'Xóa');
+    assert.equal(vietnamese['测试连接'], 'Kiểm tra kết nối');
+
+    // A hot-reloaded client re-runs apply against a locale service that already
+    // holds the previous dictionaries. The duplicate-throwing service must still
+    // receive the newly introduced vi-VN locale instead of failing at "zh".
+    const alreadyRegistered = new Set(['zh', 'en']);
+    const hotRegistrations = [];
+    const hotEffects = [];
+    const hotCtx = {
+      ...ctx,
+      effect: (install, label) => { hotEffects.push({ install, label }); },
+      locale: {
+        ...ctx.locale,
+        register(namespace, value) {
+          const locales = typeof value === 'string' ? [value] : Object.keys(value);
+          for (const locale of locales) {
+            if (alreadyRegistered.has(locale)) {
+              throw new Error(`locale namespace "${namespace}" already has locale "${locale}"`);
+            }
+          }
+          for (const locale of locales) alreadyRegistered.add(locale);
+          hotRegistrations.push({ namespace, locales });
+          return () => {};
+        },
+      },
+    };
+    applyClient(hotCtx);
+    hotEffects.find((entry) => entry.label === 'im-settings: bilingual dictionaries').install();
+    assert.deepEqual(hotRegistrations.map((entry) => entry.locales), [['vi-VN']]);
+    assert.ok(alreadyRegistered.has('vi-VN'));
     assert.equal(registrations.length, 1);
     assert.equal(registrations[0].options.name, 'settings.section');
-    assert.equal(registrations[0].options.id, 'xmanrui-dsh-im');
+    assert.equal(registrations[0].options.id, 'dsh-im');
     assert.equal(registrations[0].options.order, 21);
     assert.equal(registrations[0].options.locale, IM_LOCALE_NAMESPACE);
     assert.equal(registrations[0].options.label(), 'IM bots');
@@ -1333,11 +1366,9 @@ test('client registers one top-level bilingual IM settings section with a direct
 
     const injected = registrations[0].options.inject();
     const signal = new AbortController().signal;
-    await injected.updateRpcCall('update.status', {}, signal);
     await injected.globalSettingsRpcCall('settings.inbound-ttl.get', {}, signal);
     await injected.imessageRpcCall('connection.status', {}, signal);
     assert.deepEqual(rpcCalls, [
-      ['/api', 'dsh-im/dsh-im', { method: 'update.status', payload: {} }, signal],
       ['/api', `dsh-im${GLOBAL_SETTINGS_RPC_CHANNEL}`, { method: 'settings.inbound-ttl.get', payload: {} }, signal],
       ['/api', 'dsh-im/imessage', { method: 'connection.status', payload: {} }, signal],
     ]);
@@ -1350,6 +1381,19 @@ test('client registers one top-level bilingual IM settings section with a direct
       { operation: 'list', path: '/workspace/current', signal },
       { operation: 'pick' },
     ]);
+
+    // A vi-VN interface must render Vietnamese from the plugin's own dictionary,
+    // even while the locale service fallback chain has not adopted the language
+    // pack yet (that lag is what left the panel in English).
+    activeLocale = 'vi-VN';
+    assert.equal(registrations[0].options.label(), 'Bot IM');
+    const viMarkup = renderToStaticMarkup(React.createElement(
+      registrations[0].component,
+      injected,
+    ));
+    assert.match(viMarkup, /Cài đặt chung/);
+    assert.doesNotMatch(viMarkup, /通用设置/);
+    activeLocale = 'en';
 
     const markup = renderToStaticMarkup(React.createElement(
       registrations[0].component,
@@ -1371,15 +1415,26 @@ test('client registers one top-level bilingual IM settings section with a direct
     disposeMirror();
     assert.equal(localeListeners.size, 0);
 
-    assert.match(markup, /Connecting DeepSeek Harness/);
+    assert.doesNotMatch(markup, /Connecting DeepSeek Harness|触手可及/);
     assert.match(markup, new RegExp(
       `class="dim-brandVersion">v${IM_PLUGIN_VERSION.replaceAll('.', '\\.')}<\\/span>`,
     ));
-    assert.match(markup, /Help &amp; feedback · Open GitHub/);
+    assert.doesNotMatch(markup, /Help &amp; feedback · Open GitHub|dim-githubAction/);
     assert.match(markup, /General settings/);
-    assert.match(markup, />WeChat<|>Feishu<|>DingTalk<|>WeCom</);
-    assert.match(markup, />QQ<[^]*>Slack<[^]*>Telegram<[^]*>Discord<[^]*>WhatsApp</);
-    assert.match(markup, />AI Office<\/strong><small class="dim-channelNote">\(Experimental\)<\/small>/);
+    assert.match(markup, />Telegram</);
+    assert.match(markup, />Discord</);
+    assert.match(markup, />Slack</);
+    assert.match(markup, />WhatsApp</);
+    assert.match(markup, />WeChat</);
+    assert.match(markup, />Feishu</);
+    assert.match(markup, />DingTalk</);
+    assert.match(markup, />WeCom</);
+    assert.match(markup, />QQ</);
+    assert.match(markup, />iMessage<\/strong><small class="dim-channelNote">\(Experimental\)<\/small>/);
+    assert.deepEqual(
+      [...markup.matchAll(/id="dim-tab-([a-zA-Z]+)"/g)].map((match) => match[1]),
+      ['telegram', 'discord', 'slack', 'whatsapp', 'weixin', 'feishu', 'dingtalk', 'wecom', 'qq', 'imessage'],
+    );
     assert.doesNotMatch(markup, /[\p{Script=Han}]/u);
   } finally {
     setImTranslator(null);
@@ -1487,7 +1542,6 @@ test('all nine channel settings and connected cards render English copy', () => 
       FeishuSettingsTab,
       DingtalkSettingsTab,
       WecomSettingsTab,
-      WecomAppSettingsTab,
       QqSettingsTab,
       SlackSettingsTab,
       TelegramSettingsTab,
@@ -1503,7 +1557,6 @@ test('all nine channel settings and connected cards render English copy', () => 
     assert.match(pageMarkup, /Loading Feishu bots/);
     assert.match(pageMarkup, /Loading DingTalk connection status/);
     assert.match(pageMarkup, /Loading WeCom bot status/);
-    assert.match(pageMarkup, /Loading WeCom app status/);
     assert.match(pageMarkup, /Loading QQ bot status/);
     assert.match(pageMarkup, /Loading Slack bot status/);
     assert.match(pageMarkup, /Loading Telegram bot status/);
@@ -1565,7 +1618,7 @@ test('every channel tab receives its RPC call from the settings render site', as
   // page mounted without an RPC call and rendered "missing RPC connection".
   const source = await readFile(new URL('index.js', CLIENT_SOURCE_DIRECTORY_URL), 'utf8');
   const tabIds = [...source.matchAll(/\{\s*id:\s*'([a-zA-Z]+)',\s*label:/g)].map(m => m[1]);
-  assert.ok(tabIds.length >= 12, `expected the channel tab list, found ${tabIds.length}`);
+  assert.ok(tabIds.length >= 11, `expected the channel tab list, found ${tabIds.length}`);
 
   // Parse the dependency block that feeds IMSettingsTab. Upstream (#231)
   // refactored the render site into a reusable panel, so the props now come
@@ -2112,8 +2165,8 @@ test('the email entry point stays hidden while the Host reports the channel clos
     return '';
   };
   const rpcCalls = Object.fromEntries(
-    ['feishu', 'weixin', 'dingtalk', 'wecom', 'wecomApp', 'qq', 'slack', 'telegram',
-      'discord', 'whatsapp', 'imessage', 'office']
+    ['feishu', 'weixin', 'dingtalk', 'wecom', 'qq', 'slack', 'telegram',
+      'discord', 'whatsapp', 'imessage']
       .map((channel) => [`${channel}RpcCall`, async () => ({ ok: true, value: {} })]),
   );
   const closed = [];

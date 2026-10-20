@@ -67,7 +67,7 @@ test('prefixes all channels and preserves the full generated Unicode title', () 
   const channels = {
     weixin: '微信', feishu: '飞书', dingtalk: '钉钉', wecom: '企业微信',
     qq: 'QQ', slack: 'Slack', telegram: 'Telegram', discord: 'Discord',
-    whatsapp: 'WhatsApp', imessage: 'iMessage', office: 'AI Office',
+    whatsapp: 'WhatsApp', imessage: 'iMessage',
   };
   const original = '标题'.repeat(20) + '👨‍👩‍👧‍👦';
   for (const [channel, label] of Object.entries(channels)) {
@@ -131,8 +131,8 @@ test('does not miss an automatic revision arriving between queued decoration and
   decorator.close();
 });
 
-test('recognizes persisted IM and Office RPC origins without relying on session-id prefixes', async () => {
-  for (const channel of ['weixin', 'feishu', 'dingtalk', 'wecom', 'qq', 'slack', 'telegram', 'discord', 'whatsapp', 'imessage', 'office']) {
+test('recognizes persisted IM RPC origins without relying on session-id prefixes', async () => {
+  for (const channel of ['weixin', 'feishu', 'dingtalk', 'wecom', 'qq', 'slack', 'telegram', 'discord', 'whatsapp', 'imessage']) {
     const f = fixture();
     const session = f.add('random-id', [message(channel), titleEvent('Task')]);
     const decorator = f.start();

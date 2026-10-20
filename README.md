@@ -51,9 +51,9 @@
 
 ## 简介
 
-通过扫码、App Manifest 或已有机器人凭据把 IM 机器人接入 DeepSeek Harness，并让本机 Harness 主动连接公网 AI Office。一个插件、一个设置入口，统一管理内置 IM 渠道和 AI Office Connector。**每个 IM 渠道都支持接入多个机器人**，各机器人的连接状态、工作区、模型和会话绑定彼此独立；iMessage 是本机 Messages.app 身份接入的例外，详见[iMessage 渠道说明](docs/imessage.md)。
+通过扫码、App Manifest 或已有机器人凭据把 IM 机器人接入 DeepSeek Harness。一个插件、一个设置入口，统一管理内置 IM 渠道。**每个 IM 渠道都支持接入多个机器人**，各机器人的连接状态、工作区、模型和会话绑定彼此独立；iMessage 是本机 Messages.app 身份接入的例外，详见[iMessage 渠道说明](docs/imessage.md)。
 
-Connect IM bots to DeepSeek Harness by scanning a QR code, using an App Manifest, or entering existing bot credentials, and let the local Harness connect outward to a public AI Office. One plugin and one settings entry manage the built-in IM channels and the AI Office Connector.
+Connect IM bots to DeepSeek Harness by scanning a QR code, using an App Manifest, or entering existing bot credentials, One plugin and one settings entry manage the built-in IM channels.
 
 ## 界面
 
@@ -69,18 +69,15 @@ Connect IM bots to DeepSeek Harness by scanning a QR code, using an App Manifest
 | 微信 | 使用微信扫码绑定机器人 | 腾讯 iLink 长轮询收发消息；等待 Harness 回答时显示“正在输入”，最终回复按 1,800 字符分段发送 |
 | 钉钉 | 扫码创建机器人，或使用 Client ID + Client Secret 手动绑定 | 钉钉 Stream 长连接；通过 AI Card 流式显示回答 |
 | 企业微信 | 使用企业微信 App 扫码创建智能机器人，或使用 Bot ID + Secret 手动绑定 | 官方 WebSocket 长连接；原生显示“正在思考中”、工具执行进度和流式回答 |
-| 企业微信应用 | 在企业微信管理后台创建自建应用，填写企业 ID、AgentId、Secret、Token、EncodingAESKey（可选代理地址） | HTTP 回调接收；私聊支持流式回复（微信端不支持时自动改为分段文本），支持图片输入与结果文件回传；成员的微信关注该企业的微信插件后可在微信中直接使用 |
 | QQ | 使用手机 QQ 扫码创建机器人，或使用 AppID + AppSecret 手动绑定 | WebSocket 长连接；私聊显示“正在输入”并以单条 Markdown 回复，群聊被 @ 后只发送最终答案 |
 | Slack | 使用预置 App Manifest 创建应用，再填写 Bot Token（`xoxb-`）和 App Token（`xapp-`） | Socket Mode 长连接；私聊直接回复，频道被 @ 后响应，优先使用官方流式消息 API |
 | Telegram | 使用 @BotFather 生成的 Bot Token | Bot API 长轮询；默认私聊直接响应、群聊被提及或回复时响应，也可为每个机器人独立启用私聊白名单安全模式；关闭思考过程留痕时，私聊、群聊和 Topic 均通过占位消息编辑展示进度并原位完成富文本回复，避免 Android 私聊 Draft 占用发送入口，平台不支持富文本时回退为普通文字 |
 | Discord | 使用 Developer Portal 生成的 Bot Token | Gateway v10 长连接；私信直接回复；服务器文字/公告频道首次 @ 后创建原生 Thread，后续在线程中无需重复 @，并通过编辑消息流式显示回答 |
 | WhatsApp | 使用手机 WhatsApp 扫码关联设备 | WhatsApp Web 长连接；默认仅响应账号自聊，也可切换到指定联系人或开放响应模式；群聊仅在被 @ 或回复机器人消息时触发，主人普通发言不触发；显示已读和“正在输入”，通过每秒编辑同一条消息显示工具进度和逐步生成的回答，长回复自动分段，编辑失败时回退为完整文字回复 |
 | iMessage | 在 macOS Messages.app 中登录 iMessage，并按[渠道说明](docs/imessage.md)授予本机权限 | 使用 macOS 原生 Messages.app 收发文本私聊；不依赖 BlueBubbles；每个 macOS 用户账户使用一个本机 iMessage 身份 |
-| Matrix（实验功能） | 填写 homeserver 地址，并提供访问令牌，或用户 ID 与密码 | CS API 长轮询接收；私聊直接回复，房间被 @ 后响应，支持线程回复、HTML 白名单富文本与编辑式流式输出，可回传图片和结果文件；包含实验性房间消息加解密，限制见下文 |
 
 WhatsApp 会保存最近 2,000 条机器人群消息的标识，重启后仍可通过引用这些消息唤醒机器人。升级前未记录或已超出保留范围的历史消息不会作为唤醒依据；请 @ 机器人或回复其新消息。
 
-Matrix 加密目前仅供非敏感测试：默认 optional 模式尝试启动加密引擎，失败时跳过收到的加密消息；required 模式在引擎启动失败时拒绝连接。尚未实现交互式设备验证、密钥备份、SSSS 或媒体附件内容加密，本次发布未验证真实 homeserver／Element 互通，请勿将其视为完整的端到端保密保障。
 
 企业微信自建应用的回调基址、代理地址和企业可信 IP 配置，见[企业微信自建应用接入说明](docs/企业微信自建应用接入.md)。
 
@@ -123,18 +120,13 @@ WhatsApp、飞书、Telegram、Discord、Slack、QQ 支持自动保存实际收�
 | Telegram | 机器人必须能在当前聊天发送文档，实际可发送范围以 Bot API 返回为准。 |
 | Discord | Developer Portal 的 Bot 设置中需启用 **Message Content Intent**；机器人需有 **Send Messages**、**Create Public Threads**、**Send Messages in Threads** 和 **Read Message History** 权限；发送结果文件还需 **Attach Files**。实际附件额度由当前账号与服务器能力决定。 |
 | WhatsApp | 当前绑定会话需支持 Document Message，实际可发送范围以 WhatsApp/Baileys 返回为准。 |
-| Matrix | homeserver 需允许媒体上传，单文件实际上限由其媒体仓库配置决定；被拒绝时插件会明确提示检查媒体大小限制与上传权限。 |
-
-## AI Office Connector
-
-[查看 AI Office Connector 说明](docs/AI-Office-Connector.md)
 
 ## 安装
 
 推荐从 npm 安装已发布的稳定版本：
 
 ```sh
-dsh plugin --profile web add -w @xmanrui/dsh-im
+dsh plugin --profile web add -w dsh-im
 ```
 
 重启 `dsh web`、刷新浏览器，然后打开「设置 → IM机器人」。IM机器人使用 `order: 21`，尽量排在一级设置菜单的「Agent 预设」之后；插件页面不再保留旧入口。从旧版升级不会改变已有机器人、凭据、工作区、Agent Preset 或会话绑定。
@@ -176,7 +168,7 @@ dsh web
 | 飞书指令面板 | 每个飞书机器人可在「更多设置 → 指令面板」里决定聊天输入框打 `/` 时列出哪些指令、按什么顺序：「跟随默认」使用插件自带的 31 条清单（随插件版本更新），「自定义」则恰好是所选指令和所选顺序。隐藏只是不在候选里出现，手动输入同一命令照旧可用；清单之外手工添加的指令不会被删除。配好一个机器人后，可用「保存并同步到其他机器人」一次写到该渠道的其他所有机器人（会覆盖它们各自的面板设置；离线机器人下次启动时生效）。保存后由机器人后台同步，指令较多时需要一点时间。 |
 | 飞书被 @ 时开话题 | 默认开启。在群聊或私聊里 @机器人 提问时，机器人会在那条消息下新建一条飞书话题，问答都落在话题内；该话题是 dsh 会话列表里一条独立会话，话题里的后续消息属于同一个会话。只发一个 @机器人（打开菜单）不会新建话题，没有 @机器人 的消息仍留在原会话。可在机器人卡片的「群聊」设置里关闭，关闭后群聊与私聊都恢复平铺回复。 |
 | 飞书任务过程展示 | 每个飞书机器人可选择不显示过程、实时直播、实时过程卡或逐步消息。实时直播使用飞书原生思考过程展示推理、工具调用和结果，最终答案单独发送；需要飞书 PC 7.70、移动端 7.74 或更新版本。飞书原生思考过程目前无法发到话题内，因此话题中的回合会改用实时过程卡，过程与答案都留在话题里。 |
-| 会话渠道标识 | 本机 Host 的 IM 渠道与 AI Office 会话自动标记来源。Web 会话列表和搜索结果将「微信 ·」等前缀显示为渠道 Logo；保留 DSH 原有的自动标题生成与更新。已有会话在下次加载时补上。 |
+| 会话渠道标识 | 本机 Host 的 IM 渠道会话自动标记来源。Web 会话列表和搜索结果将「微信 ·」等前缀显示为渠道 Logo；保留 DSH 原有的自动标题生成与更新。已有会话在下次加载时补上。 |
 
 渠道前缀在 DSH 生成标题后追加，完整保留原始标题与自动／手动来源，不会将自动标题锁定为手动命名，也不会额外调用模型。重复生成、刷新或重启不会叠加前缀；真实的手动命名仍遵循 DSH 原有的锁定规则。此功能由当前 Host 的会话事件驱动，显式连接远程 `harnessBaseUrl` 时需在目标 Host 上安装该插件。
 
@@ -191,7 +183,7 @@ Logo 由 dsh-im 的浏览器适配显示，无需修改 DSH。适配保留原始
 
 没有运行中的任务时正常开始新任务；图片、文件、语音和带引用的消息继续按原有方式处理。原有群聊提及规则和权限限制保留，自动插话需要具备 `/steer` 权限。两种模式均可使用 `/steer 补充内容` 手动插话。
 
-保存后立即影响新收到的消息，已排队的消息不会转为插话。AI Office 当前没有普通聊天消息追加入口，此设置不适用。
+保存后立即影响新收到的消息，已排队的消息不会转为插话。
 
 ### 主动投递
 
@@ -199,7 +191,7 @@ Logo 由 dsh-im 的浏览器适配显示，无需修改 DSH。适配保留原始
 
 已保存的私聊目标还可以开启默认关闭的「会话双向同步」。开启后，DSH Web／CLI 在该私聊当前 Session 中发送的用户文字和最终助手文字会同步回私聊，定时任务成功完成后的最终助手文字也会同步；IM 侧原有提问与 `/steer` 不会重复。开关自动跟随 `/session`、`/new` 和工作区切换后的当前 Session。首版仅支持当前 Host 的私聊文字；群聊、Topic、Thread 与显式远程 `harnessBaseUrl` 不支持。
 
-同步回答按渠道能力呈现 Markdown：复用飞书卡片、Telegram 富文本、QQ／钉钉／Slack 的格式消息，以及企业微信机器人、Matrix、Discord 的已有能力；WhatsApp 适配常用格式，企业微信应用和微信保留完整文本。格式降级与长消息处理沿用或复用渠道机制，发送结果未知时不新增自动重发。
+同步回答按渠道能力呈现 Markdown：复用飞书卡片、Telegram 富文本、QQ／钉钉／Slack 的格式消息，以及企业微信机器人和 Discord 的已有能力；WhatsApp 适配常用格式，微信保留完整文本。格式降级与长消息处理沿用或复用渠道机制，发送结果未知时不新增自动重发。
 
 设置步骤、各渠道字段、完整调用示例、管理端点、错误码与排错说明请查看[《主动投递使用指南》](PROACTIVE_DELIVERY.md)（[English](PROACTIVE_DELIVERY.en.md)）。
 
@@ -259,7 +251,7 @@ Logo 由 dsh-im 的浏览器适配显示，无需修改 DSH。适配保留原始
 | 交互式提问 | 回复选项序号、选项文字或自定义文字；多选时用逗号分隔。飞书中，提问发起人发送图片或图文消息会结束本轮追问，并在同一会话继续处理图片，无需答完剩余问题或重新发图。 |
 | 远程审批 | 回复 `批准` / `拒绝` / `同意` / `不同意` / `yes` / `no`。 |
 
-Web 与机器人可同时处理同一审批，先提交的「批准一次」或「拒绝」生效，另一端随即失效。支持微信、飞书、钉钉、企业微信机器人／应用、QQ、Telegram、Slack、Discord、WhatsApp、Matrix；iMessage、邮箱和 AI Office 暂不参与。机器人发起时使用原聊天；Web 或其他 Host 任务发起时，需要该 Session 恰好绑定一个已开启双向同步的私聊。同一私聊的目标别名按一个入口计算，多个私聊只发 Web 处理提醒。审批复用当前绑定与权限，绑定变更后不能继续提交；不提供永久批准。Slack 从 Web 投递审批还需 `im:read` 权限，可更新应用 Manifest 后重新安装应用；缺少权限时保留 Web 处理入口。
+Web 与机器人可同时处理同一审批，先提交的「批准一次」或「拒绝」生效，另一端随即失效。支持微信、飞书、钉钉、企业微信机器人／应用、QQ、Telegram、Slack、Discord、WhatsApp；iMessage 和邮箱暂不参与。机器人发起时使用原聊天；Web 或其他 Host 任务发起时，需要该 Session 恰好绑定一个已开启双向同步的私聊。同一私聊的目标别名按一个入口计算，多个私聊只发 Web 处理提醒。审批复用当前绑定与权限，绑定变更后不能继续提交；不提供永久批准。Slack 从 Web 投递审批还需 `im:read` 权限，可更新应用 Manifest 后重新安装应用；缺少权限时保留 Web 处理入口。
 
 ### 命令说明
 
@@ -280,18 +272,18 @@ Web 与机器人可同时处理同一审批，先提交的「批准一次」或�
 - **流式回复和进度提示**：插件会按各平台能力显示正在思考、工具执行和逐步生成的回答；不支持原生流式接口的平台会通过编辑消息、卡片更新或最终消息完成回复。
 - **飞书语音交互（可选渠道能力）**：在每张机器人卡片的「更多设置 → 语音交互」中独立配置，默认关闭。开启后，语音消息经 ffmpeg 转码、DashScope `qwen3-asr-flash` 转写为文字，按正常文字流水线处理（命令识别、会话、模型与回传均一致），同一回合的答案同时经 `qwen3-tts-flash` 合成为语音回复原消息；转写失败时明确降级为原有的“仅支持文字、图片和文件”提示，不影响其他能力。凭据在插件凭据库中以环境变量名（`secretRef`，默认 `DASHSCOPE_API_KEY`）管理，密钥本身不进入机器人配置；转写模型、合成模型、回复音色和 ffmpeg 路径可按机器人调整，音色支持 `qwen3-tts-flash` 官方音色（如 Cherry、Serena、Bella、Chelsie、Momo、Katerina）。需要本机可用 ffmpeg 与可访问 DashScope 的密钥。
 
-微信、飞书、钉钉、企业微信、QQ、Slack、Telegram、Discord、WhatsApp、企业微信应用、iMessage、邮箱和 AI Office 的绑定、连接或移除失败时，可展开页面中的「诊断详情」并点击「复制诊断信息」。反馈时附上操作步骤、Desktop/Web 运行方式和实际 DSH 版本；使用页面中的 `WX-CONN-…`、`DT-CONN-…` 或 `IM-CONN-…` 参考号查找同一次故障的渠道 Host 日志。诊断会保留失败阶段、已识别的底层原因、HTTP 状态及可用的耗时等安全信息；多个原因会一并列出，无法识别时明确标为「暂未识别」，不包含登录令牌、二维码或原始响应内容。账号已移除但本机清理未完成时，页面会保留清理警告。消息故障沿用 `MF-…` 参考号；若页面提示 DSH 管理接口无法访问且没有 Host 参考号，请检查 DSH 管理连接。网络排查应以运行 DSH 的机器为准。
+Telegram、Discord、Slack、WhatsApp、微信、飞书、钉钉、企业微信、QQ、iMessage 和邮箱的绑定、连接或移除失败时，可展开页面中的「诊断详情」并点击「复制诊断信息」。反馈时附上操作步骤、Desktop/Web 运行方式和实际 DSH 版本；使用页面中的 `WX-CONN-…`、`DT-CONN-…` 或 `IM-CONN-…` 参考号查找同一次故障的渠道 Host 日志。诊断会保留失败阶段、已识别的底层原因、HTTP 状态及可用的耗时等安全信息；多个原因会一并列出，无法识别时明确标为「暂未识别」，不包含登录令牌、二维码或原始响应内容。账号已移除但本机清理未完成时，页面会保留清理警告。消息故障沿用 `MF-…` 参考号；若页面提示 DSH 管理接口无法访问且没有 Host 参考号，请检查 DSH 管理连接。网络排查应以运行 DSH 的机器为准。
 
 微信启动配置校验失败时，诊断还会提供 `file`、`field`、`issue`，定位 `config.json` 或 `workspaces.json` 中第一个未通过校验的位置。字段中的序号从 0 开始，按文件条目顺序计数，例如 `workspaces[0].value` 表示第一条工作区配置的值，不包含真实账号标识。默认目录为 `DSH_HOME/integrations/dsh-weixin`（未设置 `DSH_HOME` 时为 `~/.dsh/integrations/dsh-weixin`），自定义路径以插件配置为准。修复后需要重启 DSH；页面「重新读取」仅查询状态，不会重新加载配置文件。
 
 ## 设计
 
-- Harness 一级设置菜单中只注册一个「IM机器人」设置页，其中包含内置 IM 渠道和一个 AI Office Connector；
-- 内置渠道及 Office Connector 的 Host、客户端与运行时源码都在本仓库维护，不依赖外部独立插件；
-- 设置页跟随 DeepSeek Harness 的语言选择，在中文和 English 之间即时切换；机器人发出的聊天消息、命令帮助和 Telegram 命令菜单同样跟随该界面语言并即时切换，中文始终为兜底，未收录的文案原样输出；
-- 左侧使用 Logo 切换微信、飞书、钉钉、企业微信、企业微信应用、QQ、Slack、Telegram、Discord、WhatsApp、iMessage、Matrix 和 AI Office，不使用启用/停用开关；
-- 各 IM 渠道保持独立的 RPC、凭据、连接监督和会话映射；Office Connector 另行维护设备凭据、Job 租约、审批等待与并发上限；
-- 浏览器只获得二维码、Manifest、脱敏状态，以及用户为当前 Telegram 或 WhatsApp 机器人主动保存的访问模式和白名单标识；手动输入的 Secret 或 Token 仅单向提交给本机 Host，任何 RPC 响应都不会返回 App Secret、`bot_token`、钉钉 `client_secret`、企业微信 Secret、QQ `app_secret`、Slack Bot/App Token、Telegram/Discord Bot Token、WhatsApp 关联设备密钥、Matrix 访问令牌与密码、AI Office Device Token，或从平台消息中观察到的其他原始用户标识。
+- Harness 一级设置菜单中只注册一个「IM机器人」设置页，其中包含内置 IM 渠道；
+- 内置渠道的 Host、客户端与运行时源码都在本仓库维护，不依赖外部独立插件；
+- 设置页跟随 DeepSeek Harness 的语言选择，在中文、English 和 Tiếng Việt（vi-VN，需安装 vi-VN 语言插件）之间即时切换；机器人发出的聊天消息、命令帮助和 Telegram 命令菜单同样跟随该界面语言并即时切换，中文始终为兜底，未收录的文案原样输出；
+- 左侧使用 Logo 切换 Telegram、Discord、Slack、WhatsApp、微信、飞书、钉钉、企业微信、QQ 和 iMessage，不使用启用/停用开关；
+- 各 IM 渠道保持独立的 RPC、凭据、连接监督和会话映射；
+- 浏览器只获得二维码、Manifest、脱敏状态，以及用户为当前 Telegram 或 WhatsApp 机器人主动保存的访问模式和白名单标识；手动输入的 Secret 或 Token 仅单向提交给本机 Host，任何 RPC 响应都不会返回 App Secret、`bot_token`、钉钉 `client_secret`、企业微信 Secret、QQ `app_secret`、Slack Bot/App Token、Telegram/Discord Bot Token、WhatsApp 关联设备密钥，或从平台消息中观察到的其他原始用户标识。
 
 ## 本地开发
 
@@ -326,7 +318,7 @@ dsh web --trusted-host dsh.example.com
 如需将 IM 管理额外限制为仅本机访问，可在当前 Web profile 的 `cordis.patch.yml` 中设置：
 
 ```yaml
-- id: xmanrui-dsh-im
+- id: dsh-im
   config:
     rpcAuthority: loopback
 ```
@@ -337,7 +329,7 @@ dsh web --trusted-host dsh.example.com
 
 ### 聊天消息语言
 
-**无需配置。** 机器人发出的聊天消息、命令帮助和 Telegram 命令菜单跟随 DeepSeek Harness 的界面语言。在 **设置 → 通用 → 语言** 中把 DSH 切换为 English，机器人即以英文回复；切换即时生效，无需重启 Host，也无需重连机器人。
+**无需配置。** 机器人发出的聊天消息、命令帮助和 Telegram 命令菜单跟随 DeepSeek Harness 的界面语言。在 **设置 → 通用 → 语言** 中把 DSH 切换为 English，机器人即以英文回复；切换即时生效，无需重启 Host，也无需重连机器人。机器人消息目前为中文／English 两套词典，选择 Tiếng Việt 时机器人按英文回复；设置页本身有完整越南语词典。
 
 语言按以下顺序取第一个有效值：
 
@@ -356,7 +348,7 @@ dsh web --trusted-host dsh.example.com
 如需固定一种语言、不随阅读者的界面语言变化，可在插件配置中设置 `language`（也接受 `en-US`、`english`），或设置环境变量 `DSH_IM_LANGUAGE=en`：
 
 ```yaml
-- id: xmanrui-dsh-im
+- id: dsh-im
   config:
     language: en
 ```

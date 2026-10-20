@@ -50,7 +50,7 @@
 
 ## Introduction
 
-Connect IM bots to DeepSeek Harness by scanning a QR code, using an App Manifest, or entering existing bot credentials, and let the local Harness connect outward to a public AI Office. One plugin and one settings entry manage the built-in IM channels and the AI Office Connector. iMessage uses one native Messages.app identity per macOS user account; see the [iMessage channel notes](docs/imessage.md).
+Connect IM bots to DeepSeek Harness by scanning a QR code, using an App Manifest, or entering existing bot credentials, One plugin and one settings entry manage the built-in IM channels. iMessage uses one native Messages.app identity per macOS user account; see the [iMessage channel notes](docs/imessage.md).
 
 ## Interface
 
@@ -72,11 +72,9 @@ Connect IM bots to DeepSeek Harness by scanning a QR code, using an App Manifest
 | Discord | Enter a Bot Token generated in the Developer Portal | Gateway v10 connection; direct DM replies; the first mention in a server text or announcement channel creates a native Thread, where follow-up messages no longer need to mention the bot; replies stream through message edits |
 | WhatsApp | Scan a QR code with mobile WhatsApp to link a device | WhatsApp Web connection; self-chat only by default, with optional selected-contact and open-response modes; groups require a mention or a reply to a bot message, including for the linked account; read receipt and typing indicator, with tool progress and incremental answers shown by editing one message at one-second intervals; long replies split automatically and failed edits fall back to a complete text reply |
 | iMessage | Sign in to iMessage in macOS Messages.app and grant the local permissions described in the [channel notes](docs/imessage.md) | Native macOS Messages.app transport for text DMs; no BlueBubbles or third-party gateway; one local iMessage identity per macOS user account |
-| Matrix (experimental) | Enter the homeserver URL plus an access token, or a user id with a password | CS API long polling; DMs are answered directly and rooms answer when the bot is @-mentioned, with thread replies, allowlisted HTML, edit-based streaming, and image/result-file delivery; includes experimental room-message encryption/decryption, subject to the limits below |
 
 WhatsApp retains the identifiers of the latest 2,000 bot messages sent to groups, so replies to those messages still work after a restart. Replies to older messages outside that history, including unrecorded messages sent before upgrading, do not wake the bot; mention the bot or reply to one of its new messages instead.
 
-Matrix encryption is currently for non-sensitive testing only. The default optional mode attempts to start the crypto engine and skips incoming encrypted messages if it fails; required mode refuses to connect when crypto startup fails. Interactive device verification, key backup, SSSS, and attachment-content encryption are not implemented. This release has not been validated against a live homeserver/Element setup; do not treat it as a complete end-to-end confidentiality guarantee.
 
 Other IM platforms can be added through the same channel-adapter structure.
 The iMessage contribution is documented separately in [the iMessage channel
@@ -120,18 +118,13 @@ After the model calls the file-return tool, the plugin hands the specified file 
 | Telegram | The bot must be allowed to send documents in the current chat; the Bot API response determines the actual range. |
 | Discord | Enable **Message Content Intent** in the Developer Portal. The bot needs **Send Messages**, **Create Public Threads**, **Send Messages in Threads**, and **Read Message History**; result-file delivery also requires **Attach Files**. The current account and server capability determine the actual attachment allowance. |
 | WhatsApp | The linked session must support Document Messages; the WhatsApp/Baileys response determines the actual range. |
-| Matrix | The homeserver must allow media uploads; its media repository configuration decides the real per-file limit. When an upload is rejected, the plugin asks you to check the media size limit and upload permissions. |
-
-## AI Office Connector
-
-[Read the AI Office Connector guide](docs/AI-Office-Connector.en.md)
 
 ## Installation
 
 Install the published stable release from npm (recommended):
 
 ```sh
-dsh plugin --profile web add -w @xmanrui/dsh-im
+dsh plugin --profile web add -w dsh-im
 ```
 
 Restart `dsh web`, refresh the browser, then open **Settings → IM Bot**. The top-level IM Bot entry uses `order: 21` to follow **Agent Presets**, and the Plugins page no longer retains the old entry. Upgrading preserves existing bots, credentials, workspaces, Agent Presets, and Session bindings.
@@ -174,7 +167,7 @@ Use the proxy URL required by your network and restart the Host after changing i
 | Feishu topic on mention | On by default. Mentioning the bot in a group or a private chat opens a dedicated Feishu topic under that message, and both the question and the answer stay inside it. The topic is an independent conversation in the dsh session list, and later messages in the topic belong to the same conversation. A bare "@bot" (which opens the menu) opens no topic, and messages without a mention stay in the chat's own conversation. Turn it off from the bot card's "Group" settings to return to flat replies in groups and private chats alike. |
 | Feishu task progress display | Each Feishu bot can hide progress or use Live process, Live process card, or step-by-step messages. Live process uses Feishu's native thinking-process surface for reasoning, tool calls, and results, then sends the final answer separately. It requires Feishu desktop 7.70, mobile 7.74, or newer. Feishu's native thinking process currently cannot be posted inside a topic, so turns in a topic use the Live process card instead and keep the process and the answer in the topic. |
 | Feishu voice interaction | Configure each Feishu bot independently under **More settings → Voice** on its bot card (optional channel capability, off by default). When enabled, voice messages are transcoded with ffmpeg and transcribed by DashScope `qwen3-asr-flash`, then processed through the normal text pipeline (commands, Sessions, model calls, and file delivery behave identically); the same turn's answer is also synthesized with `qwen3-tts-flash` as a voice reply to the original message. If transcription fails, the bot falls back explicitly to the existing text/image/file-only notice. The DashScope key is managed in the plugin credential store by environment variable name (`secretRef`, default `DASHSCOPE_API_KEY`) and never enters bot configuration. The ASR model, TTS model, reply voice (official `qwen3-tts-flash` voices such as Cherry, Serena, Bella, Chelsie, Momo, Katerina), and ffmpeg path are per-bot settings. It requires a working local ffmpeg and a key that can reach DashScope. |
-| Session channel identity | Sessions from the local Host's IM channels and AI Office are marked with their source. The Web Session list and search results display channel logos in place of prefixes such as “WeChat ·”, preserving DSH's automatic title generation and updates. Existing Sessions receive the prefix when next loaded. |
+| Session channel identity | Sessions from the local Host's IM channels are marked with their source. The Web Session list and search results display channel logos in place of prefixes such as “WeChat ·”, preserving DSH's automatic title generation and updates. Existing Sessions receive the prefix when next loaded. |
 
 Channel prefixes are appended after DSH produces a title, preserving its complete text and automatic/manual source without pinning automatic titles or making additional model calls. Regeneration, refresh, and restarts do not stack prefixes; actual manual renames retain DSH's normal pinning behavior. This feature uses the current Host's Session events; an explicit remote `harnessBaseUrl` requires the plugin on the destination Host.
 
@@ -189,7 +182,7 @@ Open a bot's **More settings → General**, choose **New messages while a task i
 
 When idle, messages start a task normally. Images, files, voice messages, and quoted replies keep their existing handling. Group mention rules and permissions still apply; automatic steering requires `/steer` permission. Both modes retain `/steer <additional instruction>` for manual steering.
 
-Saving takes effect for newly received messages immediately; already queued messages stay queued. AI Office has no ordinary chat follow-up input, so this setting does not apply to it.
+Saving takes effect for newly received messages immediately; already queued messages stay queued.
 
 ### Proactive delivery
 
@@ -197,7 +190,7 @@ IM channels with proactive delivery support can send text through a stable `botI
 
 Saved direct-message targets also offer an opt-in **Two-way Session sync** switch. Once enabled, user text submitted from DSH Web/CLI and the final assistant text in that DM's current Session are mirrored back to the DM, including final assistant text from successfully completed scheduled tasks; ordinary IM prompts and `/steer` are not duplicated. The switch follows the current Session across `/session`, `/new`, and workspace changes. The first version supports text DMs on the current Host only; groups, Topics, Threads, and explicit remote `harnessBaseUrl` connections are unavailable.
 
-Synced answers use channel-specific Markdown rendering: Feishu cards, Telegram rich text, QQ/DingTalk/Slack formatted messages, and existing WeCom bot, Matrix and Discord support. WhatsApp adapts common formatting; WeCom app and Weixin preserve the full text. Formatting fallback and long-message handling reuse channel mechanisms without adding retries for uncertain delivery.
+Synced answers use channel-specific Markdown rendering: Feishu cards, Telegram rich text, QQ/DingTalk/Slack formatted messages, and existing WeCom bot and Discord support. WhatsApp adapts common formatting; Weixin preserves the full text. Formatting fallback and long-message handling reuse channel mechanisms without adding retries for uncertain delivery.
 
 See the [Proactive Delivery Guide](PROACTIVE_DELIVERY.en.md) ([简体中文](PROACTIVE_DELIVERY.md)) for setup steps, native fields for each supported channel, complete call examples, management endpoints, error codes, and troubleshooting.
 
@@ -257,7 +250,7 @@ DSH versions supporting global panels show **IM bots** in the left sidebar, usin
 | Interactive question | Reply with an option number, option label, or custom text; separate multiple choices with commas. In Feishu, an image or image post from the person answering ends the pending question turn and is processed in the same Session, without finishing the remaining questions or resending the image. |
 | Remote approval | Reply with `批准` / `拒绝` / `同意` / `不同意` / `yes` / `no`. |
 
-Web and bot approvals share one decision: the first allow-once or reject wins and retires the other prompt. Supported channels are WeChat, Feishu, DingTalk, WeCom bot/app, QQ, Telegram, Slack, Discord, WhatsApp, and Matrix; iMessage, email, and AI Office are excluded. Bot-origin approvals use the original chat. Web/Host-origin approvals require exactly one bound private chat with bidirectional sync enabled; aliases of that chat count once, while multiple chats receive a Web-only notice. Binding and access checks apply again when submitting, and permanent approval is not offered. Slack delivery from Web additionally requires `im:read`; update the app Manifest and reinstall the app if needed. Web remains usable when the bot cannot present an approval.
+Web and bot approvals share one decision: the first allow-once or reject wins and retires the other prompt. Supported channels are WeChat, Feishu, DingTalk, WeCom bot/app, QQ, Telegram, Slack, Discord, and WhatsApp; iMessage and email are excluded. Bot-origin approvals use the original chat. Web/Host-origin approvals require exactly one bound private chat with bidirectional sync enabled; aliases of that chat count once, while multiple chats receive a Web-only notice. Binding and access checks apply again when submitting, and permanent approval is not offered. Slack delivery from Web additionally requires `im:read`; update the app Manifest and reinstall the app if needed. Web remains usable when the bot cannot present an approval.
 
 ### Command details
 
@@ -277,18 +270,18 @@ DingTalk menus use a shared template built into the plugin; no template setup is
 - **Manage multiple bots independently**: a channel can have multiple connected bots. Credentials, connection state, workspace, model, Agent Preset, and chat-to-Session mappings are kept separately for every bot, so card actions do not affect sibling bots.
 - **Streaming replies and progress**: the plugin uses each platform's available capabilities to show thinking state, tool progress, and incremental answers. Platforms without a native streaming API complete replies through message edits, card updates, or a final message.
 
-If setup, connection, or removal fails in WeChat, Feishu, DingTalk, Enterprise WeChat, QQ, Slack, Telegram, Discord, WhatsApp, Enterprise WeChat App, iMessage, Email, or AI Office, expand **Diagnostic details** and choose **Copy diagnostics**. Include the steps, Desktop/Web mode, and actual DSH version in your report; use the displayed `WX-CONN-…`, `DT-CONN-…`, or `IM-CONN-…` reference to find the matching channel Host log. Diagnostics preserve the failing stage, recognized underlying causes, HTTP status, and available timings. Multiple causes are listed together; unrecognized causes are explicitly marked **Unknown**. Login tokens, QR contents, and raw responses are excluded. When removal succeeds but local cleanup fails, the page retains a cleanup warning. Message failures keep their existing `MF-…` references. If the page cannot reach the DSH management API and has no Host reference, check the DSH management connection. Investigate network failures on the machine running DSH.
+If setup, connection, or removal fails in Telegram, Discord, Slack, WhatsApp, WeChat, Feishu, DingTalk, Enterprise WeChat, QQ, iMessage, or Email, expand **Diagnostic details** and choose **Copy diagnostics**. Include the steps, Desktop/Web mode, and actual DSH version in your report; use the displayed `WX-CONN-…`, `DT-CONN-…`, or `IM-CONN-…` reference to find the matching channel Host log. Diagnostics preserve the failing stage, recognized underlying causes, HTTP status, and available timings. Multiple causes are listed together; unrecognized causes are explicitly marked **Unknown**. Login tokens, QR contents, and raw responses are excluded. When removal succeeds but local cleanup fails, the page retains a cleanup warning. Message failures keep their existing `MF-…` references. If the page cannot reach the DSH management API and has no Host reference, check the DSH management connection. Investigate network failures on the machine running DSH.
 
 Startup configuration validation failures also include `file`, `field`, and `issue`, identifying the first rejected field in `config.json` or `workspaces.json`. Field positions use zero-based entry order: `workspaces[0].value` means the first workspace entry's value without exposing its account identifier. The default directory is `DSH_HOME/integrations/dsh-weixin`, or `~/.dsh/integrations/dsh-weixin` when `DSH_HOME` is unset; custom plugin paths take precedence. Restart DSH after fixing the file. Refreshing the settings status does not reload configuration files.
 
 ## Design
 
-- Registers one top-level **IM Bot** settings page containing the built-in IM channels and one AI Office Connector.
-- Maintains the Host, client, and runtime sources for the built-in channels and the Office Connector in this repository without external standalone plugins.
-- Follows the DeepSeek Harness language preference and switches the settings UI live between Chinese and English. Bot chat messages, command help, and the Telegram command menu follow the same interface language and switch live, with Chinese always as the fallback so untranslated text is sent verbatim.
-- Uses logos for WeChat, Feishu, DingTalk, WeCom, QQ, Slack, Telegram, Discord, WhatsApp, iMessage, Matrix, and AI Office navigation without enable/disable switches.
-- Keeps RPC endpoints, credentials, connection supervision, and session mappings isolated by IM channel; the Office Connector separately owns Device credentials, Job leases, approval waits, and concurrency limits.
-- Returns only QR codes, the public Slack Manifest, redacted status data, and access modes or allowlist identifiers explicitly saved for the current Telegram or WhatsApp bot. Manually entered secrets and Tokens travel one way to the local Host; no RPC response returns App Secrets, `bot_token`, DingTalk `client_secret`, WeCom Secrets, QQ `app_secret`, Slack Bot/App Tokens, Telegram/Discord Bot Tokens, WhatsApp linked-device keys, Matrix access tokens and passwords, AI Office Device Tokens, or other raw user identifiers observed from platform messages.
+- Registers one top-level **IM Bot** settings page containing the built-in IM channels.
+- Maintains the Host, client, and runtime sources for the built-in channels in this repository without external standalone plugins.
+- Follows the DeepSeek Harness language preference and switches the settings UI live between Chinese, English, and Tiếng Việt (vi-VN, provided by the vi-VN locale plugin). Bot chat messages, command help, and the Telegram command menu follow the same interface language and switch live, with Chinese always as the fallback so untranslated text is sent verbatim; the bot dictionaries are Chinese/English only, so a Vietnamese UI gets English bot replies.
+- Uses logos for Telegram, Discord, Slack, WhatsApp, WeChat, Feishu, DingTalk, Enterprise WeChat, QQ, and iMessage navigation without enable/disable switches.
+- Keeps RPC endpoints, credentials, connection supervision, and session mappings isolated by IM channel.
+- Returns only QR codes, the public Slack Manifest, redacted status data, and access modes or allowlist identifiers explicitly saved for the current Telegram or WhatsApp bot. Manually entered secrets and Tokens travel one way to the local Host; no RPC response returns App Secrets, `bot_token`, DingTalk `client_secret`, WeCom Secrets, QQ `app_secret`, Slack Bot/App Tokens, Telegram/Discord Bot Tokens, WhatsApp linked-device keys, or other raw user identifiers observed from platform messages.
 
 ## Local development
 
@@ -323,7 +316,7 @@ With a reverse proxy, preserve the browser-facing domain and port in the `Host` 
 To additionally restrict IM management to local access, set the following in the active Web profile's `cordis.patch.yml`:
 
 ```yaml
-- id: xmanrui-dsh-im
+- id: dsh-im
   config:
     rpcAuthority: loopback
 ```
@@ -353,7 +346,7 @@ Run `node scripts/verify-interface-language.mjs /path/to/deepseek-harness` to ve
 To pin one language regardless of who is reading the interface, set `language` in the plugin config (also accepts `en-US` or `english`), or set the `DSH_IM_LANGUAGE=en` environment variable:
 
 ```yaml
-- id: xmanrui-dsh-im
+- id: dsh-im
   config:
     language: en
 ```

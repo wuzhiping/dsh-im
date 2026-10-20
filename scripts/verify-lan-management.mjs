@@ -137,7 +137,7 @@ try {
   const packages = {
     '@deepseek-ai/dsh-base': resolve(harnessRoot, 'packages/bundle/base'),
     '@deepseek-ai/dsh-web-app': resolve(harnessRoot, 'packages/bundle/web-app'),
-    '@xmanrui/dsh-im': pluginRoot,
+    'dsh-im': pluginRoot,
   };
   for (const [name, path] of Object.entries(packages)) {
     const target = join(profile, 'node_modules', name);
@@ -160,8 +160,8 @@ try {
   expectStatus('LAN authenticated web page', await request(new URL('/', lan.origin), {
     headers: { cookie: lan.cookie },
   }), 200);
-  const channels = ['feishu', 'weixin', 'dingtalk', 'wecom', 'wecom-app', 'qq',
-    'slack', 'telegram', 'discord', 'whatsapp', 'imessage', 'matrix', 'office'];
+  const channels = ['feishu', 'weixin', 'dingtalk', 'wecom', 'qq',
+    'slack', 'telegram', 'discord', 'whatsapp', 'imessage'];
   for (const channel of channels) {
     expectStatus(`LAN default: ${channel}`, await readyStatus(lan, channel), 200, true);
   }
@@ -206,7 +206,7 @@ try {
     'dingtalk', 'connection.status', { origin: otherTrustedOrigin.origin }), 403);
 
   await stop();
-  await writeFile(join(profile, 'cordis.patch.yml'), '- id: xmanrui-dsh-im\n  config:\n    rpcAuthority: loopback\n');
+  await writeFile(join(profile, 'cordis.patch.yml'), '- id: dsh-im\n  config:\n    rpcAuthority: loopback\n');
   const restrictedUrl = await start();
   expectStatus('Explicit loopback rejects LAN', await rpc(await login(restrictedUrl, lanIp)), 403);
   expectStatus('Explicit loopback accepts 127.0.0.1', await readyStatus(await login(restrictedUrl, '127.0.0.1')), 200, true);

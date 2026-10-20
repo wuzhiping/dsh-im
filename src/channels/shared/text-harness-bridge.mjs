@@ -119,9 +119,6 @@ function artifactFailureText(fileName, error, descriptor) {
       if (descriptor?.key === 'telegram') {
         return t('结果文件「{name}」已生成，但 Telegram 不允许机器人在当前聊天发送文档，请检查聊天权限。', { name });
       }
-      if (descriptor?.key === 'matrix') {
-        return t('结果文件「{name}」已生成，但 Matrix homeserver 拒绝了媒体上传，请检查其媒体大小限制与上传权限。', { name });
-      }
       return t('结果文件「{name}」已生成，但当前机器人没有文件发送权限，请检查渠道权限。', { name });
     case 'artifact-too-large':
       return t('结果文件「{name}」超过当前渠道大小上限，未发送。', { name });

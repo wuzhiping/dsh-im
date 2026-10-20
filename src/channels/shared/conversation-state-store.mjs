@@ -20,9 +20,9 @@ const EMPTY_STATE = Object.freeze({ version: 1, sessions: {}, seenMessageIds: []
  * before its turn runs can replay it (submitted: false) or report it
  * (submitted: true, meaning the Harness inbox already owns it).
  *
- * Wired today by TextHarnessBridge (telegram, slack, discord, matrix,
+ * Wired today by TextHarnessBridge (telegram, slack, discord,
  * whatsapp, email, imessage) and QqHarnessBridge. The channels that run their
- * own queue path (weixin, dingtalk, wecom, wecom-app, feishu) still need the
+ * own queue path (weixin, dingtalk, wecom, feishu) still need the
  * same treatment.
  */
 function validPendingMessage(value) {

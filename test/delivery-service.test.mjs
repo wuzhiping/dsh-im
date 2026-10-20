@@ -478,7 +478,7 @@ function approvalAdapter(channel, keys, { present = async () => true } = {}) {
   return { adapter, offers, notices };
 }
 
-for (const channel of ['feishu', 'weixin', 'dingtalk', 'wecom', 'wecom-app', 'qq', 'telegram', 'slack', 'discord', 'whatsapp', 'matrix']) {
+for (const channel of ['feishu', 'weixin', 'dingtalk', 'wecom', 'qq', 'telegram', 'slack', 'discord', 'whatsapp']) {
   test(`${channel}: one real bound private chat gets one approval despite target aliases`, async () => {
     const service = createDeliveryService();
     const { adapter, offers, notices } = approvalAdapter(channel, ['private:actor', 'private:actor']);
@@ -509,7 +509,7 @@ test('multiple bound chats receive a Web notice and cannot compete for approval'
   assert.match(first.notices.at(-1)[3], /未获批准/);
 });
 
-for (const channel of ['imessage', 'email', 'office']) {
+for (const channel of ['imessage', 'email']) {
   test(`${channel}: excluded channels never receive competitive approvals`, async () => {
     const service = createDeliveryService();
     const { adapter, offers, notices } = approvalAdapter(channel, ['private:actor']);

@@ -8,10 +8,9 @@ import { runClearCommand } from '../src/channels/shared/clear-command.mjs';
 
 const clients = [
   ['weixin', 'HarnessClient'], ['qq', 'QqHarnessClient'], ['feishu', 'HarnessClient'],
-  ['dingtalk', 'HarnessClient'], ['wecom', 'WecomHarnessClient'], ['wecom-app', 'WecomAppHarnessClient'],
+  ['dingtalk', 'HarnessClient'], ['wecom', 'WecomHarnessClient'],
   ['telegram', 'TelegramHarnessClient'], ['discord', 'DiscordHarnessClient'], ['slack', 'SlackHarnessClient'],
   ['whatsapp', 'WhatsappHarnessClient'], ['imessage', 'IMessageHarnessClient'], ['email', 'EmailHarnessClient'],
-  ['matrix', 'MatrixHarnessClient'], ['office', 'HarnessClient'],
 ];
 
 function fixture() {
@@ -65,9 +64,7 @@ function fixture() {
 for (const [channel, exportName] of clients) {
   test(`${channel} sends a live Host peer when preparing new and existing sessions and reading models`, async () => {
     const f = fixture();
-    const directory = channel === 'office' ? 'shared' : channel;
-    const file = channel === 'matrix' ? 'matrix-harness-client' : 'harness-client';
-    const { [exportName]: Client } = await import(`../src/channels/${directory}/${file}.mjs`);
+    const { [exportName]: Client } = await import(`../src/channels/${channel}/harness-client.mjs`);
     const client = new Client({ ...harnessConnection(f.ctx), workspace: '/workspace',
       commandExecutor: createHarnessCommandExecutor(f.ctx) });
     try {

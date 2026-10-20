@@ -17,7 +17,7 @@
     "client": {
       "platform": "web",
       "inject": [
-        "@xmanrui/dsh-im",
+        "dsh-im",
         "dsh-tauri"
       ]
     }

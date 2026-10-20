@@ -7,7 +7,7 @@ import { en } from '../plugin-src/client/i18n.js';
 import { IM_MAIN_PANEL_ID, installImPluginPage } from '../plugin-src/client/plugin-page.js';
 
 const { act, create } = TestRenderer;
-const packageName = '@xmanrui/dsh-im';
+const packageName = 'dsh-im';
 const bundle = { kind: 'bundle', pkg: { name: packageName } };
 const flush = () => new Promise((resolve) => setImmediate(resolve));
 

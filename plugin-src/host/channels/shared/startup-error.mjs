@@ -2,9 +2,9 @@ import { t } from '../../../../src/channels/shared/i18n.mjs';
 
 const CHANNEL_NAMES = {
   weixin: '微信', feishu: '飞书', dingtalk: '钉钉', wecom: '企业微信',
-  'wecom-app': '企业微信应用', qq: 'QQ', slack: 'Slack', telegram: 'Telegram',
+  qq: 'QQ', slack: 'Slack', telegram: 'Telegram',
   discord: 'Discord', whatsapp: 'WhatsApp', imessage: 'iMessage',
-  email: '邮箱', matrix: 'Matrix', office: 'AI Office',
+  email: '邮箱',
 };
 const INVALID_CONFIG_MESSAGES = new Set([
   'dsh-weixin config contains invalid account data',
@@ -12,11 +12,9 @@ const INVALID_CONFIG_MESSAGES = new Set([
   'dsh-feishu config contains duplicate bot identities',
   'dsh-feishu config is incomplete or invalid',
   'dsh-dingtalk config contains invalid bot data',
-  ...['Enterprise WeChat', 'Enterprise WeChat app', 'QQ', 'Slack', 'Telegram', 'Discord', 'Email']
+  ...['Enterprise WeChat', 'QQ', 'Slack', 'Telegram', 'Discord', 'Email']
     .map(channel => `dsh-im ${channel} config contains invalid bot data`),
   'dsh-im WhatsApp config contains invalid account data',
-  'dsh-im Matrix config contains invalid bot data',
-  'dsh-im AI Office config is invalid',
   'dsh-im workspace config is invalid',
 ]);
 
@@ -34,9 +32,7 @@ export function publicChannelStartupError(channel, error) {
   if (error instanceof SyntaxError || INVALID_CONFIG_MESSAGES.has(error?.message)) {
     return {
       code: `${channel}-startup-config-invalid`,
-      message: channel === 'office'
-        ? t('{channel}配置格式错误。请检查其数据目录中的 config.json，修复后重启 DSH。详细原因请查看启动日志。', params)
-        : t('{channel}配置格式错误。请检查其数据目录中的 config.json 和 workspaces.json，修复后重启 DSH。详细原因请查看启动日志。', params),
+      message: t('{channel}配置格式错误。请检查其数据目录中的 config.json 和 workspaces.json，修复后重启 DSH。详细原因请查看启动日志。', params),
       details: {},
     };
   }

@@ -3,13 +3,11 @@ const CHANNELS = new Set([
   'feishu',
   'dingtalk',
   'wecom',
-  'wecom-app',
   'qq',
   'slack',
   'telegram',
   'discord',
   'whatsapp',
-  'matrix',
 ]);
 
 function isRecord(value) {
@@ -81,15 +79,6 @@ function whatsappSuggestion(key) {
   return group ? { kind: 'group', route: { jid: group[1] } } : null;
 }
 
-function matrixSuggestion(key) {
-  const dm = /^dm:(@[A-Za-z0-9._=\-\/+]+:[A-Za-z0-9.-]+(?::\d{1,5})?)$/.exec(key);
-  if (dm) return { kind: 'dm', route: { userId: dm[1] } };
-  const room = /^room:([!#][^:$\s]+:[A-Za-z0-9.-]+(?::\d{1,5})?)(?:\$(\$[^\s]+))?$/u.exec(key);
-  if (!room) return null;
-  if (room[2] === undefined) return { kind: 'room', route: { roomId: room[1] } };
-  return { kind: 'thread', route: { roomId: room[1], threadId: room[2] } };
-}
-
 /** Convert one persisted conversation key into a stable proactive-delivery route. */
 export function deliverySuggestionFromConversationKey(channel, key) {
   if (!CHANNELS.has(channel) || typeof key !== 'string') return null;
@@ -108,8 +97,6 @@ export function deliverySuggestionFromConversationKey(channel, key) {
         ['direct', 'user', 'chatId'],
         ['group', 'group', 'chatId'],
       ]);
-    case 'wecom-app':
-      return simpleSuggestion(key, [['p2p', 'user', 'chatId']]);
     case 'qq':
       return simpleSuggestion(key, [
         ['c2c', 'user', 'userOpenId'],
@@ -123,8 +110,6 @@ export function deliverySuggestionFromConversationKey(channel, key) {
       return discordSuggestion(key);
     case 'whatsapp':
       return whatsappSuggestion(key);
-    case 'matrix':
-      return matrixSuggestion(key.replace(/^(direct|group):/, ''));
     default:
       return null;
   }
@@ -132,7 +117,6 @@ export function deliverySuggestionFromConversationKey(channel, key) {
 
 /** Convert only a persisted private-chat key into its stable delivery route. */
 export function privateDeliverySuggestionFromConversationKey(channel, key) {
-  if (channel === 'matrix' && typeof key === 'string') key = key.replace(/^direct:dm:/, 'dm:');
   const separator = typeof key === 'string' ? key.indexOf(':') : -1;
   const prefix = separator > 0 ? key.slice(0, separator) : '';
   const privatePrefix = {
@@ -140,13 +124,11 @@ export function privateDeliverySuggestionFromConversationKey(channel, key) {
     feishu: 'p2p',
     dingtalk: 'p2p',
     wecom: 'direct',
-    'wecom-app': 'p2p',
     qq: 'c2c',
     slack: 'direct',
     telegram: 'direct',
     discord: 'direct',
     whatsapp: 'direct',
-    matrix: 'dm',
   }[channel];
   if (!privatePrefix || prefix !== privatePrefix) return null;
   return deliverySuggestionFromConversationKey(channel, key);

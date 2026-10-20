@@ -185,10 +185,9 @@ await ctx.dshIm.send(botId, targetId, '# 每日报告\n\n**检查完成**', {
 | 钉钉 | 主动 Markdown 消息；明确格式拒绝时回退文本 |
 | Slack | 标准 Markdown block，保留通知文本；明确 block 拒绝时使用原有文本发送 |
 | 企业微信机器人 | 现有 Markdown 消息类型 |
-| Matrix | 清理后的 HTML，并附带文本正文 |
 | Discord | 消息正文的原生 Markdown |
 | WhatsApp | 有限转换常用格式，保护代码，复杂语法保留原文 |
-| 企业微信应用／微信 | 完整文本，保留代码和链接目标 |
+| 微信 | 完整文本，保留代码和链接目标 |
 
 长消息按渠道限制分段。飞书主动卡片保留原有不自动分段的行为，平台拒绝或结果未知时不自动改发文本。其他新增回退仅针对本地格式处理错误或明确的格式拒绝，不重发已成功的分段，不因网络结果未知而改格式重试。旧 Host 可能忽略 `format`，需要加载更新后的插件。
 
@@ -342,7 +341,7 @@ HTTP 接口只在当前 Host 提供 WebServer 时注册，并使用同一个监�
 Connection RPC 默认只允许当前 Host 的回环调用。若 Web profile 明确运行在受信任局域网，可在该 profile 的 `cordis.patch.yml` 中复用现有 Host authority：
 
 ```yaml
-- id: xmanrui-dsh-im
+- id: dsh-im
   config:
     rpcAuthority: trusted-host
 ```

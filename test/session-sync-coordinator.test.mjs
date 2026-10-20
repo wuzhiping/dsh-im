@@ -203,9 +203,9 @@ test('installed Session sync sends one scheduled answer without echoing its inte
   installed.close();
 });
 
-test('all eleven sync channels request Markdown for answers while Feishu retains its plain mirror fallback', async () => {
+test('all nine sync channels request Markdown for answers while Feishu retains its plain mirror fallback', async () => {
   const channels = ['feishu', 'telegram', 'qq', 'dingtalk', 'slack', 'wecom',
-    'matrix', 'discord', 'whatsapp', 'wecom-app', 'weixin'];
+    'discord', 'whatsapp', 'weixin'];
   const sends = [];
   const coordinator = createSessionSyncCoordinator({ deliveryService: {
     listSessionSyncTargets: async () => channels.map(channel => ({ channel, botId: channel, targetId: 'owner' })),

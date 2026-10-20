@@ -46,8 +46,6 @@ const required = [
   'plugin-src/host/channels/telegram/index.mjs',
   'plugin-src/host/channels/discord/index.mjs',
   'plugin-src/host/channels/whatsapp/index.mjs',
-  'plugin-src/host/channels/matrix/index.mjs',
-  'plugin-src/client/channels/matrix/index.js',
   'src/channels/feishu/feishu-runtime.mjs',
   'src/channels/weixin/weixin-runtime.mjs',
   'src/channels/dingtalk/dingtalk-runtime.mjs',
@@ -59,8 +57,6 @@ const required = [
   'src/channels/discord/discord-runtime.mjs',
   'src/channels/whatsapp/whatsapp-runtime.mjs',
   'src/channels/whatsapp/whatsapp-web-session.mjs',
-  'src/channels/matrix/matrix-runtime.mjs',
-  'src/channels/matrix/matrix-api.mjs',
   'src/channels/shared/context-enhancement.mjs',
 ];
 await Promise.all(required.map((path) => access(resolve(root, path))));
@@ -123,18 +119,18 @@ if (forbiddenDshLockPaths.length > 0) {
   );
 }
 
-if (!/\bid\s*:\s*["']@xmanrui\/dsh-im["']/u.test(client)) {
+if (!/\bid\s*:\s*["']dsh-im["']/u.test(client)) {
   throw new Error('client bundle does not register the dsh-im loader id');
 }
 const sourceSectionMarkers = [
   /ctx\.slots\.inject\(\s*["']settings\.section["']/u,
   /name\s*:\s*["']settings\.section["']/u,
-  /id\s*:\s*["']xmanrui-dsh-im["']/u,
+  /id\s*:\s*["']dsh-im["']/u,
   /order\s*:\s*21\b/u,
   /label\s*:\s*\(\)\s*=>\s*t\(\s*["']IM机器人["']\s*\)/u,
   /locale\s*:\s*IM_LOCALE_NAMESPACE\b/u,
 ];
-const bundleSectionPattern = /name\s*:\s*["']settings\.section["']\s*,\s*id\s*:\s*["']xmanrui-dsh-im["']\s*,\s*order\s*:\s*21\s*,\s*label\s*:\s*\(\)\s*=>\s*[$A-Z_a-z][$\w]*\(\s*["']IM(?:机器人|\\u673A\\u5668\\u4EBA)["']\s*\)\s*,\s*locale\s*:\s*(?:[$A-Z_a-z][$\w]*|["']dsh-im["'])/u;
+const bundleSectionPattern = /name\s*:\s*["']settings\.section["']\s*,\s*id\s*:\s*["']dsh-im["']\s*,\s*order\s*:\s*21\s*,\s*label\s*:\s*\(\)\s*=>\s*[$A-Z_a-z][$\w]*\(\s*["']IM(?:机器人|\\u673A\\u5668\\u4EBA)["']\s*\)\s*,\s*locale\s*:\s*(?:[$A-Z_a-z][$\w]*|["']dsh-im["'])/u;
 if (sourceSectionMarkers.some((pattern) => !pattern.test(clientEntrySource))
   || !/IM_LOCALE_NAMESPACE\s*=\s*["']dsh-im["']/u.test(clientSources)
   || !bundleSectionPattern.test(client)) {
@@ -184,15 +180,23 @@ if (!client.includes('container-type: inline-size')
   || !client.includes('@container (max-width: 680px)')) {
   throw new Error('client bundle does not contain the narrow-panel DingTalk QR layout');
 }
-for (const marker of ['/feishu', '/weixin', '/dingtalk', '/wecom', '/qq', '/slack', '/telegram', '/discord', '/whatsapp', '/matrix']) {
+for (const marker of ['/feishu', '/weixin', '/dingtalk', '/wecom', '/qq', '/slack', '/telegram', '/discord', '/whatsapp']) {
   if (!host.includes(marker)) {
     throw new Error(`host bundle does not contain the internal ${marker} RPC provider`);
   }
 }
+// The client header no longer exposes an update trigger or GitHub link, so the
+// update RPC is verified on the Host only.
 for (const marker of ['update.status', 'update.check', 'update.install']) {
-  if (!host.includes(marker) || !client.includes(marker)) {
-    throw new Error(`update RPC endpoint missing from Host or Client bundle: ${marker}`);
+  if (!host.includes(marker)) {
+    throw new Error(`update RPC endpoint missing from Host bundle: ${marker}`);
   }
+}
+// The rendered header is guarded by test/client-ui.test.mjs; here only the
+// retired tagline string must never reach the bundle. Other repo links (for
+// example the proactive-delivery doc) are separate features and stay.
+if (client.includes('触手可及')) {
+  throw new Error('client bundle still contains the retired header tagline');
 }
 if (!host.includes('https://registry.npmjs.org/') || !host.includes('desktopPnpm')) {
   throw new Error('host bundle is missing the npm updater or Desktop package-management adapter');
@@ -210,7 +214,7 @@ if (/@xmanrui\/dsh-(?:feishu|weixin|dingtalk)/.test(
 )) {
   throw new Error('source or package metadata still depends on an external channel plugin');
 }
-if (!patch.includes("name: '@xmanrui/dsh-im'") || /dsh-(?:feishu|weixin|dingtalk)/.test(patch)) {
+if (!patch.includes("name: 'dsh-im'") || /dsh-(?:feishu|weixin|dingtalk)/.test(patch)) {
   throw new Error('bundle patch must activate only dsh-im');
 }
 for (const name of ['@xmanrui/dsh-feishu', '@xmanrui/dsh-weixin', '@xmanrui/dsh-dingtalk']) {

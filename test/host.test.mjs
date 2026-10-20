@@ -8,9 +8,9 @@ import { createImHostPlugin, inject, name } from '../plugin-src/host/index.mjs';
 
 const NO_CHANNELS = Object.freeze({
   applyFeishu: async () => {}, applyWeixin: async () => {}, applyDingtalk: async () => {},
-  applyWecom: async () => {}, applyWecomApp: async () => {}, applyQq: async () => {},
+  applyWecom: async () => {}, applyQq: async () => {},
   applySlack: async () => {}, applyDiscord: async () => {}, applyWhatsapp: async () => {},
-  applyIMessage: async () => {}, applyOffice: async () => {},
+  applyIMessage: async () => {},
 });
 
 test('Host resolves the bot message language before channels start and serves its RPC', async () => {
@@ -50,7 +50,7 @@ test('Host resolves the bot message language before channels start and serves it
   assert.deepEqual(order.find(([kind]) => kind === 'telegram'), ['telegram', true]);
 });
 
-test('Host composes IM channels and the AI Office connector inside one plugin context', async () => {
+test('Host composes IM channels inside one plugin context', async () => {
   const calls = [];
   const deliveryService = { marker: 'shared-delivery-service' };
   const plugin = createImHostPlugin({
@@ -65,7 +65,6 @@ test('Host composes IM channels and the AI Office connector inside one plugin co
     applyDiscord: async (ctx, config) => calls.push(['discord', ctx, config]),
     applyWhatsapp: async (ctx, config) => calls.push(['whatsapp', ctx, config]),
     applyIMessage: async (ctx, config) => calls.push(['imessage', ctx, config]),
-    applyOffice: async (ctx, config) => calls.push(['office', ctx, config]),
   });
   const ctx = { marker: 'shared-context' };
   const config = {
@@ -80,7 +79,6 @@ test('Host composes IM channels and the AI Office connector inside one plugin co
     discord: { replyTimeoutMs: 60_000 },
     whatsapp: { replyTimeoutMs: 60_000 },
     imessage: { replyTimeoutMs: 60_000 },
-    office: { heartbeatSeconds: 30 },
   };
 
   await plugin.apply(ctx, config);
@@ -102,7 +100,6 @@ test('Host composes IM channels and the AI Office connector inside one plugin co
     ['discord', ctx, { ...config.discord, rpcAuthority: 'trusted-host', deliveryService }],
     ['whatsapp', ctx, { ...config.whatsapp, rpcAuthority: 'trusted-host', deliveryService }],
     ['imessage', ctx, { ...config.imessage, rpcAuthority: 'trusted-host', deliveryService }],
-    ['office', ctx, { ...config.office, rpcAuthority: 'trusted-host' }],
   ]);
 });
 
@@ -124,7 +121,7 @@ test('Host provides #65 and installs #84 with the same delivery service', async 
   const internals = Object.fromEntries(CHANNELS.map(([channel, applyName]) => [
     applyName,
     async (_ctx, config) => {
-      if (channel !== 'office') channelServices.push(config.deliveryService);
+      channelServices.push(config.deliveryService);
     },
   ]));
   Object.assign(internals, {
@@ -302,7 +299,6 @@ const CHANNELS = [
   ['weixin', 'applyWeixin'],
   ['dingtalk', 'applyDingtalk'],
   ['wecom', 'applyWecom'],
-  ['wecomApp', 'applyWecomApp'],
   ['qq', 'applyQq'],
   ['slack', 'applySlack'],
   ['telegram', 'applyTelegram'],
@@ -310,8 +306,6 @@ const CHANNELS = [
   ['whatsapp', 'applyWhatsapp'],
   ['imessage', 'applyIMessage'],
   ['email', 'applyEmail'],
-  ['matrix', 'applyMatrix'],
-  ['office', 'applyOffice'],
 ];
 
 function activationFixture(failedChannels) {

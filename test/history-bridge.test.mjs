@@ -12,14 +12,11 @@ import { TelegramHarnessBridge } from '../src/channels/telegram/telegram-bridge.
 import { WecomHarnessBridge } from '../src/channels/wecom/wecom-bridge.mjs';
 import { WeixinHarnessBridge } from '../src/channels/weixin/weixin-bridge.mjs';
 import { WhatsappHarnessBridge } from '../src/channels/whatsapp/whatsapp-bridge.mjs';
-import { WecomAppBridge } from '../src/channels/wecom-app/wecom-app-bridge.mjs';
-import { MatrixHarnessBridge } from '../src/channels/matrix/matrix-bridge.mjs';
 import { IMessageHarnessBridge } from '../src/channels/imessage/imessage-bridge.mjs';
 import { EmailHarnessBridge } from '../src/channels/email/email-bridge.mjs';
 
 const CHANNELS = ['weixin', 'feishu', 'dingtalk', 'wecom', 'qq', 'slack', 'telegram', 'discord', 'whatsapp'];
 const TEXT_BRIDGES = {
-  matrix: MatrixHarnessBridge,
   imessage: IMessageHarnessBridge,
   email: EmailHarnessBridge,
   slack: SlackHarnessBridge,
@@ -83,7 +80,7 @@ function fixture(channel, { sessionId = SESSION_ID, ask, readHistory, send } = {
   const sent = [];
   const seen = new Set();
   const calls = { reads: [], asks: [], mutations: [], downloads: [] };
-  const key = ['weixin', 'feishu', 'dingtalk', 'wecom-app'].includes(channel) ? 'p2p:owner'
+  const key = ['weixin', 'feishu', 'dingtalk'].includes(channel) ? 'p2p:owner'
     : channel === 'qq' ? 'c2c:owner'
       : channel === 'wecom' ? 'direct:owner' : 'direct:chat';
   const sessions = new Map(sessionId ? [[key, sessionId]] : []);
@@ -206,11 +203,6 @@ function fixture(channel, { sessionId = SESSION_ID, ask, readHistory, send } = {
         ] } } : {}),
       },
     });
-  } else if (channel === 'wecom-app') {
-    bridge = new WecomAppBridge({ ...options,
-      api: { sendText: ({ userId, content }) => record(userId, content) },
-    });
-    message = (id, text) => ({ msgid: id, msgtype: 'text', from: { userid: 'owner' }, text: { content: text } });
   } else if (channel === 'qq') {
     bridge = new QqHarnessBridge({ ...options, ownerUserOpenid: 'owner', bot: { sendText: record }, fetchImpl: download });
     message = (id, text, { image = false, file = false, group = false, sender = 'owner', echo = false } = {}) => ({
@@ -233,7 +225,7 @@ function fixture(channel, { sessionId = SESSION_ID, ask, readHistory, send } = {
   return { bridge, message, sent, calls, sessions, key, seen, status };
 }
 
-for (const channel of [...CHANNELS, 'wecom-app', 'matrix', 'imessage', 'email']) {
+for (const channel of [...CHANNELS, 'imessage', 'email']) {
   for (const [code, publicCode] of [['session-archived', 'SESSION_ARCHIVED'], ['turn-blocked', 'TURN_BLOCKED']]) {
     test(`${channel}: ${code} is visible and preserves the existing binding`, async () => {
       const f = fixture(channel, { ask: async () => {

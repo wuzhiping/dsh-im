@@ -13,7 +13,6 @@ import { WindowAmbientProvider } from '../../../src/channels/shared/conversation
 import { composeContextPrompt, contextBlockFor, dedupeContextEntries, renderContextEntries } from '../../../src/channels/shared/conversation/context-builder.mjs';
 import { CONTEXT_NOTE } from '../../../src/channels/shared/injected-context.mjs';
 import { ConversationStateStore } from '../../../src/channels/shared/conversation-state-store.mjs';
-import { MatrixRoomHistoryStore } from '../../../src/channels/matrix/matrix-room-history.mjs';
 
 const tempDirectories = new Set();
 
@@ -29,21 +28,6 @@ test.after(async () => {
 
 test('conversation key codecs reproduce the established on-disk keys byte for byte', () => {
   deepStrictEqual(encodeConversationRouteKey(buildConversationRoute({
-    channel: 'matrix',
-    chatId: '@Rjd:el.weetar.com',
-    senderId: '@Rjd:EL.Weetar.com',
-    kind: 'direct',
-  })), 'direct:dm:@rjd:el.weetar.com');
-  deepStrictEqual(encodeConversationRouteKey(buildConversationRoute({
-    channel: 'matrix',
-    chatId: '!BrESOucPXQfqxaQTiw:el.weetar.com',
-  })), 'group:room:!BrESOucPXQfqxaQTiw:el.weetar.com');
-  deepStrictEqual(encodeConversationRouteKey(buildConversationRoute({
-    channel: 'matrix',
-    chatId: '!BrESOucPXQfqxaQTiw:el.weetar.com',
-    threadId: '$FWLVNgabc:el.weetar.com',
-  })), 'group:room:!BrESOucPXQfqxaQTiw:el.weetar.com$$FWLVNgabc:el.weetar.com');
-  deepStrictEqual(encodeConversationRouteKey(buildConversationRoute({
     channel: 'feishu',
     chatId: 'oc_abc',
   })), 'group:oc_abc');
@@ -55,11 +39,11 @@ test('conversation key codecs reproduce the established on-disk keys byte for by
 });
 
 test('route building freezes the scope discriminant and refuses keys it cannot encode', () => {
-  deepStrictEqual(buildConversationRoute({ channel: 'matrix', chatId: '!r:x', threadId: '$t:x' }).scope, 'thread');
-  deepStrictEqual(buildConversationRoute({ channel: 'matrix', chatId: '!r:x' }).scope, 'group');
-  deepStrictEqual(buildConversationRoute({ channel: 'matrix', chatId: '@u:x', senderId: '@u:x', kind: 'dm' }).scope, 'dm');
+  deepStrictEqual(buildConversationRoute({ channel: 'slack', chatId: '!r:x', threadId: '$t:x' }).scope, 'thread');
+  deepStrictEqual(buildConversationRoute({ channel: 'slack', chatId: '!r:x' }).scope, 'group');
+  deepStrictEqual(buildConversationRoute({ channel: 'slack', chatId: '@u:x', senderId: '@u:x', kind: 'dm' }).scope, 'dm');
   throws(() => buildConversationRoute({ channel: '', chatId: '!r:x' }), TypeError);
-  throws(() => buildConversationRoute({ channel: 'matrix' }), TypeError);
+  throws(() => buildConversationRoute({ channel: 'slack' }), TypeError);
   throws(() => encodeConversationRouteKey({ channel: 'nope', scope: 'group', chatId: 'x' }), TypeError);
   throws(() => encodeConversationRouteKey(buildConversationRoute({
     channel: 'feishu', chatId: '@user:x', senderId: '@user:x', kind: 'direct',
@@ -107,7 +91,7 @@ test('the trigger table encodes the whole product rule set', () => {
 test('a semantic message validates identity fields and normalizes the rest', () => {
   const message = createSemanticMessage({
     id: '$e1:x',
-    channel: 'matrix',
+    channel: 'slack',
     chatId: '!r:x',
     threadId: '$t:x',
     sender: { id: ' @a:x ', name: '  ' },
@@ -121,9 +105,9 @@ test('a semantic message validates identity fields and normalizes the rest', () 
   deepStrictEqual(message.trigger, Object.freeze({ mentionedBot: true, repliedToBot: false, commandLike: false }));
   deepStrictEqual(message.replyTo, Object.freeze({ id: '$p:x', sender: '@b:x', timestamp: 5 }));
   ok(message.timestamp > 0, 'a non-positive origin falls back to the ingestion time');
-  throws(() => createSemanticMessage({ channel: 'matrix', chatId: '!r:x', sender: { id: '@a:x' } }), TypeError);
+  throws(() => createSemanticMessage({ channel: 'slack', chatId: '!r:x', sender: { id: '@a:x' } }), TypeError);
   throws(() => createSemanticMessage({ id: '$e', chatId: '!r:x', sender: { id: '@a:x' } }), TypeError);
-  throws(() => createSemanticMessage({ id: '$e', channel: 'matrix', sender: { id: '@a:x' } }), TypeError);
+  throws(() => createSemanticMessage({ id: '$e', channel: 'slack', sender: { id: '@a:x' } }), TypeError);
 });
 
 test('the root context registry injects a root once and never consumes it on failure paths', async () => {
@@ -209,9 +193,42 @@ test('the event LRU evicts the least recently used entry and refreshes on read',
   deepStrictEqual(lru.size, 0);
 });
 
+class MemoryRoomHistory {
+  #entries = [];
+
+  append(entry) {
+    if (this.#entries.some((existing) => existing.eventId === entry.eventId)) return false;
+    this.#entries.push({ ...entry });
+    return true;
+  }
+
+  search({ roomId, from, to, limit }) {
+    return this.#entries
+      .filter((entry) => entry.roomId === roomId && entry.ts >= from && entry.ts <= to)
+      .sort((left, right) => right.ts - left.ts)
+      .slice(0, limit);
+  }
+
+  pending({ roomId, limit }) {
+    return this.#entries
+      .filter((entry) => entry.roomId === roomId && entry.kind === 'human' && entry.injected !== true)
+      .slice(0, limit);
+  }
+
+  markInjected(roomId, eventIds) {
+    const wanted = new Set(eventIds);
+    let marked = 0;
+    for (const entry of this.#entries) {
+      if (entry.roomId !== roomId || !wanted.has(entry.eventId) || entry.injected === true) continue;
+      entry.injected = true;
+      marked += 1;
+    }
+    return marked;
+  }
+}
+
 test('the ambient provider follows the same-sender burst run and falls back to the recent window', async () => {
-  const directory = await makeTempDirectory('dsh-im-conversation-ambient-');
-  const store = await new MatrixRoomHistoryStore(join(directory, 'matrix-history.json')).load();
+  const store = new MemoryRoomHistory();
   const room = '!ambient:example.org';
   const now = 10_000_000;
   const seed = [
@@ -255,7 +272,6 @@ test('the ambient provider follows the same-sender burst run and falls back to t
     'a different sender cannot claim carol\'s burst');
   deepStrictEqual(store.pending({ roomId: room, limit: 10 }).map((entry) => entry.eventId), ['$old:x'],
     'only the entry older than the window was never offered, so it stays pending');
-  await store.flush();
 });
 
 test('the context builder emits split-ready injected context blocks merged by event', () => {

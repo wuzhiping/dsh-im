@@ -485,8 +485,6 @@ for (const channel of CHANNELS) {
   });
 
   test(`${channel}: a quoted batch command submits the collected text alone`, async () => {
-    // wecom-app has no reply-reference concept, so it cannot carry a quote.
-    if (channel === 'wecom-app') return;
     const current = fixture(channel, { contextEnhancement: provider(channel, settings()) });
     // Prove the quote shape reaches the model as a reply block; otherwise the
     // submission assertions below would pass without testing anything.

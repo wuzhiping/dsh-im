@@ -11,7 +11,6 @@ import { QqStateStore } from '../src/channels/qq/state-store.mjs';
 import { SlackStateStore } from '../src/channels/slack/state-store.mjs';
 import { TelegramStateStore } from '../src/channels/telegram/state-store.mjs';
 import { WecomStateStore } from '../src/channels/wecom/state-store.mjs';
-import { WecomAppStateStore } from '../src/channels/wecom-app/state-store.mjs';
 import { WeixinStateStore } from '../src/channels/weixin/state-store.mjs';
 import { WhatsappStateStore } from '../src/channels/whatsapp/state-store.mjs';
 import {
@@ -27,7 +26,6 @@ const TARGETS = {
     targetId: 'daily', kind: 'group', route: { openConversationId: 'cid_group' },
   },
   wecom: { targetId: 'daily', kind: 'user', route: { chatId: 'wecom-user' } },
-  'wecom-app': { targetId: 'daily', kind: 'user', route: { chatId: 'wecomapp-user' } },
   qq: { targetId: 'daily', kind: 'group', route: { groupOpenId: 'qq-group' } },
   slack: {
     targetId: 'daily', kind: 'thread', route: { channelId: 'C123', threadTs: '123.456' },
@@ -46,7 +44,6 @@ const STATE_STORES = {
   feishu: FeishuStateStore,
   dingtalk: DingtalkStateStore,
   wecom: WecomStateStore,
-  'wecom-app': WecomAppStateStore,
   qq: QqStateStore,
   slack: SlackStateStore,
   telegram: TelegramStateStore,
@@ -55,7 +52,6 @@ const STATE_STORES = {
 };
 
 const SESSION_SUGGESTIONS = {
-  matrix: { sessions: { 'direct:dm:@alice:example.org': 'session-matrix' }, suggestions: [{ kind: 'dm', route: { userId: '@alice:example.org' } }] },
   weixin: {
     sessions: { 'p2p:wx-user': 'session-weixin', 'group:ignored': 'session-ignored' },
     suggestions: [{ kind: 'user', route: { toUserId: 'wx-user' } }],
@@ -84,10 +80,6 @@ const SESSION_SUGGESTIONS = {
       { kind: 'user', route: { chatId: 'member-one' } },
       { kind: 'group', route: { chatId: 'wr_group' } },
     ],
-  },
-  'wecom-app': {
-    sessions: { 'p2p:wecomapp-user': 'session-user' },
-    suggestions: [{ kind: 'user', route: { chatId: 'wecomapp-user' } }],
   },
   qq: {
     sessions: { 'c2c:user-openid': 'session-user', 'group:group-openid': 'session-group' },
@@ -143,12 +135,10 @@ const SESSION_SUGGESTIONS = {
 };
 
 const PRIVATE_TARGETS = {
-  matrix: { targetId: 'private', kind: 'dm', route: { userId: '@alice:example.org' } },
   weixin: { targetId: 'private', kind: 'user', route: { toUserId: 'wx-user' } },
   feishu: { targetId: 'private', kind: 'user', route: { openId: 'ou_user' } },
   dingtalk: { targetId: 'private', kind: 'user', route: { userId: 'staff-one' } },
   wecom: { targetId: 'private', kind: 'user', route: { chatId: 'member-one' } },
-  'wecom-app': { targetId: 'private', kind: 'user', route: { chatId: 'wecomapp-user' } },
   qq: { targetId: 'private', kind: 'user', route: { userOpenId: 'user-openid' } },
   slack: { targetId: 'private', kind: 'conversation', route: { channelId: 'D123456' } },
   telegram: { targetId: 'private', kind: 'chat', route: { chatId: '88' } },

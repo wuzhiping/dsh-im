@@ -109,7 +109,7 @@ for (const channel of DIAGNOSTIC_CHANNELS) {
     assert.equal(fx.logs.length, 1);
     const api = await import(`../../../plugin-src/client/channels/${channel}/api.js`);
     let displayed;
-    try { (api.unwrapRpcResult ?? api.unwrapOfficeRpc)(result); } catch (caught) { displayed = api.presentError?.(caught) ?? caught; }
+    try { api.unwrapRpcResult(result); } catch (caught) { displayed = api.presentError?.(caught) ?? caught; }
     assert.equal(displayed.details.referenceId, result.error.details.referenceId);
     const text = formatConnectionDiagnostic(displayed);
     const markup = renderToStaticMarkup(React.createElement(ConnectionError, { error: displayed }));
@@ -228,7 +228,6 @@ const transportCases = [
   ['slack', async fetchImpl => new (await import('../../../src/channels/slack/slack-api.mjs')).SlackApi({ botToken: `xoxb-${'a'.repeat(30)}`, fetchImpl }).authTest()],
   ['discord', async fetchImpl => new (await import('../../../src/channels/discord/discord-api.mjs')).DiscordApi({ token: `${'a'.repeat(25)}.aaaa.${'b'.repeat(25)}`, fetchImpl }).getCurrentUser()],
   ['telegram', async fetchImpl => new (await import('../../../src/channels/telegram/telegram-api.mjs')).TelegramApi({ token: `123456:${'a'.repeat(30)}`, fetchImpl }).getMe()],
-  ['office', async fetchImpl => new (await import('../../../src/channels/office/office-transport.mjs')).OfficeTransport({ baseUrl: 'https://office.example.com', deviceId: 'device', token: 'x'.repeat(32), fetchImpl }).heartbeat({})],
 ];
 for (const [channel, request] of transportCases) {
   test(`${channel}: actual HTTP client preserves fetch causes and parser failures`, async () => {
@@ -248,8 +247,8 @@ for (const [channel, request] of transportCases) {
   });
 }
 
-test('DingTalk and Office retain HTTP rejection status instead of only a generic failure', async () => {
-  for (const [channel, request] of transportCases.filter(([channel]) => ['dingtalk', 'office'].includes(channel))) {
+test('DingTalk retains HTTP rejection status instead of only a generic failure', async () => {
+  for (const [channel, request] of transportCases.filter(([channel]) => channel === 'dingtalk')) {
     await assert.rejects(request(async () => new Response('{}', { status: 403 })), error => {
       assert.equal(fixture(channel).diagnostics.report(error).publicError.details.httpStatus, 403);
       return true;

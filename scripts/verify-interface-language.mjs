@@ -197,7 +197,7 @@ try {
   const packages = {
     '@deepseek-ai/dsh-base': harness.base,
     '@deepseek-ai/dsh-web-app': harness.webApp,
-    '@xmanrui/dsh-im': pluginRoot,
+    'dsh-im': pluginRoot,
   };
   for (const [name, path] of Object.entries(packages)) {
     const target = join(profile, 'node_modules', name);
@@ -305,7 +305,7 @@ try {
   // Back-compatibility: an operator pin keeps winning and ignores DSH entirely.
   await stop();
   await writeFile(join(profile, 'cordis.patch.yml'),
-    '- id: xmanrui-dsh-im\n  config:\n    language: zh-CN\n');
+    '- id: dsh-im\n  config:\n    language: zh-CN\n');
   await selectInterfaceLanguage('en');
   const pinnedBrowser = await login(await start());
   const pinned = await rpc(pinnedBrowser, 'dsh-im-language', 'settings.language.get');

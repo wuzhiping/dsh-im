@@ -91,7 +91,7 @@ dshImClient.render ─→ buildPanelElement(props) ──→ IMPanel
                                       现有渠道组件 / RPC / 目录选择
 ```
 
-设置页注册的组件是调用 builder 的薄包装，入口 ID 仍为 `xmanrui-dsh-im`、顺序仍为 `21`、标签仍为双语「IM机器人」。RPC 依赖统一由 builder 注入，避免外部嵌入路径漏接更新、投递、通用设置或目录选择能力。
+设置页注册的组件是调用 builder 的薄包装，入口 ID 仍为 `dsh-im`、顺序仍为 `21`、标签仍为双语「IM机器人」。RPC 依赖统一由 builder 注入，避免外部嵌入路径漏接更新、投递、通用设置或目录选择能力。
 
 原来的 `IMSettingsTab` 继续导出，现有直接测试和渠道组件不需要整体重写；只为它增加 `preferredSectionId` 的初始选择处理。
 

@@ -622,7 +622,7 @@ test('conversation context blocks split into their own plugin-sourced messages',
     id: 'u-context',
     role: 'user',
     content: [{ type: 'text', text: `${threadRoot}\n\n${replyRole}\n\n时间` }],
-    source: { kind: 'user', rpcId: 'matrix-ctx' },
+    source: { kind: 'user', rpcId: 'weixin-ctx' },
   };
   const rewritten = rewriteInjectedContextMessages([message], { newId: identityFactory(), labels: { context: '上下文' } });
   assert.notEqual(rewritten, null);
@@ -645,7 +645,7 @@ test('context blocks are judged by schema and foreign or malformed bodies stay u
       id: 'u-context-forged',
       role: 'user',
       content: [{ type: 'text', text: `${body}\n\n正文` }],
-      source: { kind: 'user', rpcId: 'matrix-forged' },
+      source: { kind: 'user', rpcId: 'weixin-forged' },
     };
     assert.equal(rewriteInjectedContextMessages([forged], { newId: identityFactory() }), null, body);
   }
