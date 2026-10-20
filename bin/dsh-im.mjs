@@ -1,17 +1,19 @@
 #!/usr/bin/env node
 
+import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { homedir, tmpdir } from 'node:os';
-import { isAbsolute, join, resolve } from 'node:path';
+import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 const PACKAGE_NAME = 'dsh-im';
-const DEFAULT_SOURCE = 'github:xmanrui/dsh-im';
+const DEFAULT_SOURCE = 'github:wuzhiping/dsh-im';
 const LEGACY_PACKAGES = [
   '@xmanrui/dsh-feishu',
   '@xmanrui/dsh-weixin',
   '@xmanrui/dsh-dingtalk',
 ];
+const DSH_ENTRY_SUFFIX = join('node_modules', '@deepseek-ai', 'dsh', 'lib', 'bin.js');
 
 function usage() {
   console.log(`Usage:
@@ -19,8 +21,11 @@ function usage() {
   dsh-im uninstall [--profile web]
 
 Examples:
-  npx -y github:xmanrui/dsh-im install
-  dsh-im install --source .`);
+  npx -y github:wuzhiping/dsh-im install
+  dsh-im install --source .
+
+If DSH is installed somewhere this CLI cannot discover, set DSH_CLI to its
+lib/bin.js path (or to an executable that takes the same arguments).`);
 }
 
 function takeOption(args, name, fallback) {
@@ -32,14 +37,61 @@ function takeOption(args, name, fallback) {
   return value;
 }
 
+/** Resolve `<prefix>/node_modules/@deepseek-ai/dsh/lib/bin.js` for an npm prefix. */
+function entryUnder(prefix) {
+  if (!prefix) return null;
+  for (const candidate of [join(prefix, DSH_ENTRY_SUFFIX), join(prefix, '..', DSH_ENTRY_SUFFIX)]) {
+    if (existsSync(candidate)) return resolve(candidate);
+  }
+  return null;
+}
+
+/**
+ * Find a runnable DSH CLI.
+ *
+ * `spawnSync('dsh', …, { shell: false })` cannot execute npm's Windows shims:
+ * `dsh` and `dsh.ps1` are scripts, and `dsh.cmd` needs cmd.exe. Resolve the real
+ * JavaScript entry instead and run it with the current Node binary.
+ */
+function resolveDsh() {
+  if (process.env.DSH_CLI) {
+    return { command: process.env.DSH_CLI, prefixArgs: [], shell: false };
+  }
+  if (process.platform !== 'win32') return { command: 'dsh', prefixArgs: [], shell: false };
+
+  const prefixes = [];
+  // npx passes its --prefix down as npm_config_prefix.
+  if (process.env.npm_config_prefix) prefixes.push(process.env.npm_config_prefix);
+  if (process.env.APPDATA) prefixes.push(join(process.env.APPDATA, 'npm'));
+  const located = spawnSync('where', ['dsh'], { encoding: 'utf8', shell: false });
+  for (const line of String(located.stdout ?? '').split(/\r?\n/)) {
+    const found = line.trim();
+    if (found) prefixes.push(dirname(found));
+  }
+  for (const prefix of prefixes) {
+    const entry = entryUnder(prefix);
+    if (entry) return { command: process.execPath, prefixArgs: [entry], shell: false };
+  }
+  // Last resort: let cmd.exe interpret the shim.
+  return { command: 'dsh.cmd', prefixArgs: [], shell: true };
+}
+
 function runDsh(args) {
-  const result = spawnSync('dsh', args, {
-    cwd: tmpdir(),
-    stdio: 'inherit',
-    shell: false,
-  });
+  const { command, prefixArgs, shell } = resolveDsh();
+  const result = shell
+    ? spawnSync(
+      [command, ...prefixArgs, ...args]
+        .map((part) => (/[\s"]/u.test(part) ? `"${part.replaceAll('"', '\\"')}"` : part))
+        .join(' '),
+      { cwd: tmpdir(), stdio: 'inherit', shell: true },
+    )
+    : spawnSync(command, [...prefixArgs, ...args], {
+      cwd: tmpdir(),
+      stdio: 'inherit',
+      shell: false,
+    });
   if (result.error?.code === 'ENOENT') {
-    throw new Error('找不到 dsh，请先安装 DeepSeek Harness 并确保 dsh 在 PATH 中。');
+    throw new Error('找不到 dsh，请先安装 DeepSeek Harness，并把 dsh 加入 PATH 或设置 DSH_CLI。');
   }
   if (result.error) throw result.error;
   if (result.status !== 0) throw new Error(`dsh 退出，状态码 ${result.status ?? 1}`);
